@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
+use App\Models\Setting;
 
 
 class DevoteeController extends Controller
@@ -73,22 +76,22 @@ public function dashboard()
 
 
     $recentBookings = DB::table('pooja_bookings')
-        ->join(
-            'poojas',
-            'pooja_bookings.pooja_id',
-            '=',
-            'poojas.pooja_id'
-        )
-        ->where(
-            'pooja_bookings.devotee_id',
-            $devotee->devotee_id
-        )
+        ->join('poojas', 'pooja_bookings.pooja_id', '=', 'poojas.pooja_id')
+        ->leftJoin('priests', 'pooja_bookings.priest_id', '=', 'priests.priest_id')
+        ->leftJoin('users as priest_user', 'priests.user_id', '=', 'priest_user.id')
+        ->where('pooja_bookings.devotee_id', $devotee->devotee_id)
         ->select(
+            'pooja_bookings.booking_id',
             'poojas.pooja_name',
             'pooja_bookings.booking_date',
-            'pooja_bookings.booking_status'
+            'pooja_bookings.booking_time',
+            'pooja_bookings.booking_type',
+            'pooja_bookings.payment_status',
+            'pooja_bookings.booking_status',
+            'priest_user.name as priest_name'
         )
-        ->limit(3)
+        ->orderBy('pooja_bookings.booking_date', 'desc')
+        ->orderBy('pooja_bookings.booking_time', 'desc')
         ->get();
 
 
@@ -120,9 +123,11 @@ public function dashboard()
     // ADMIN DEVOTEE CRUD OPERATIONS
     // ============================================
 
-    public function manageDevotees()
+    public function manageDevotees(Request $request)
     {
-        $devotees = DB::table('devotees')
+        $status = $request->get('verification_status');
+
+        $query = DB::table('devotees')
             ->join('users', 'devotees.user_id', '=', 'users.id')
             ->leftJoin('memberships', 'devotees.membership_id', '=', 'memberships.membership_id')
             ->select(
@@ -130,13 +135,21 @@ public function dashboard()
                 'users.name',
                 'users.email',
                 'users.mobile',
+                'users.email_verified_at',
                 'memberships.membership_name'
-            )
-            ->get();
+            );
+
+        if ($status === 'Verified') {
+            $query->whereNotNull('users.email_verified_at');
+        } elseif ($status === 'Unverified') {
+            $query->whereNull('users.email_verified_at');
+        }
+
+        $devotees = $query->get();
 
         $memberships = DB::table('memberships')->where('status', 'Active')->get();
 
-        return view('admin.manage-devotees', compact('devotees', 'memberships'));
+        return view('admin.manage-devotees', compact('devotees', 'memberships', 'status'));
     }
 
     public function addDevoteePage()
@@ -149,33 +162,8 @@ public function dashboard()
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                function ($attribute, $value, $fail) {
-                    $existingUser = DB::table('users')
-                        ->where('email', $value)
-                        ->where('role', 'Devotee')
-                        ->first();
-                    if ($existingUser) {
-                        $fail('This email is already registered as a Devotee.');
-                    }
-                }
-            ],
-            'mobile' => [
-                'required',
-                'string',
-                'max:15',
-                function ($attribute, $value, $fail) {
-                    $existingUser = DB::table('users')
-                        ->where('mobile', $value)
-                        ->where('role', 'Devotee')
-                        ->first();
-                    if ($existingUser) {
-                        $fail('This mobile number is already registered as a Devotee.');
-                    }
-                }
-            ],
+            'email' => 'required|email|unique:users,email',
+            'mobile' => 'required|string|max:15|unique:users,mobile',
             'gender' => 'nullable|string|in:Male,Female,Other',
             'dob' => 'nullable|date',
             'gothra' => 'nullable|string|max:100',
@@ -212,6 +200,7 @@ public function dashboard()
                     ->update([
                         'role' => 'Devotee',
                         'status' => 'Active',
+                        'email_verified_at' => now(),
                         'updated_at' => now()
                     ]);
 
@@ -225,6 +214,7 @@ public function dashboard()
                     'role' => 'Devotee',
                     'status' => 'Active',
                     'must_change_password' => 1,
+                    'email_verified_at' => now(),
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -259,12 +249,44 @@ public function dashboard()
 
             DB::commit();
 
-            $message = $existingUser ? 'User promoted to Devotee successfully!' : 'Devotee Added Successfully!';
-            $passwordMessage = $existingUser ? null : $password;
+            // Handling System Mode
+            $systemMode = Setting::get('system_mode', 'Testing Mode');
+            $emailHandling = Setting::get('testing_email_handling', 'Do Not Send Emails');
 
-            return redirect()->route('admin.devotees.index')
-                ->with('success', $message)
-                ->with('generated_password', $passwordMessage);
+            $sendEmail = false;
+            $flashPassword = false;
+
+            if ($systemMode === 'Testing Mode') {
+                $flashPassword = true;
+                if ($emailHandling === 'Send Emails') {
+                    $sendEmail = true;
+                }
+            } else {
+                $sendEmail = true;
+            }
+
+            if ($sendEmail) {
+                try {
+                    Mail::to($request->email)->send(new WelcomeMail($request->name, 'Devotee', $request->email, $password));
+                } catch (\Exception $e) {
+                    // Ignore mail errors
+                }
+            }
+
+            $message = $existingUser ? 'User promoted to Devotee successfully!' : 'Devotee Added Successfully!';
+
+            if ($flashPassword) {
+                return redirect()->route('admin.devotees.index')
+                    ->with('success', $message)
+                    ->with('success_user_created', [
+                        'name' => $request->name,
+                        'email' => $request->email,
+                        'password' => $password,
+                        'role' => 'Devotee'
+                    ]);
+            } else {
+                return redirect()->route('admin.devotees.index')->with('success', $message);
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -295,6 +317,17 @@ public function dashboard()
             $devotee = DB::table('devotees')->where('devotee_id', $id)->first();
             if (!$devotee) {
                 return redirect()->back()->with('error', 'Devotee not found.');
+            }
+
+            // Verify unique email/mobile among other users
+            $dupEmail = DB::table('users')->where('email', $request->email)->where('id', '!=', $devotee->user_id)->first();
+            if ($dupEmail) {
+                return redirect()->back()->with('error', 'Email address is already in use.')->withInput();
+            }
+
+            $dupMobile = DB::table('users')->where('mobile', $request->mobile)->where('id', '!=', $devotee->user_id)->first();
+            if ($dupMobile) {
+                return redirect()->back()->with('error', 'Mobile number is already in use.')->withInput();
             }
 
             $membershipStartDate = $devotee->membership_start_date;

@@ -894,4 +894,48 @@
         });
     });
 </script>
+
+<!-- Testing Mode Success Modal -->
+@if(session('success_user_created'))
+<div class="modal fade" id="testingUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4" style="background: #fdfbf7; border: 1px solid #b8863a !important;">
+            <div class="modal-header border-0 pb-0 text-center d-block">
+                <span class="fs-1">✨</span>
+                <h4 class="modal-title fw-bold text-success mt-2">User Created (Testing Mode)</h4>
+            </div>
+            <div class="modal-body py-4 px-4">
+                <p class="text-muted text-center mb-4">Since the system is in <strong>Testing Mode</strong>, the credentials are shown below. No emails are sent unless configured otherwise.</p>
+                <div class="bg-white p-3 rounded-3 border mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Name:</span>
+                        <span class="fw-bold">{{ session('success_user_created.name') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Email:</span>
+                        <span class="fw-bold">{{ session('success_user_created.email') }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Role:</span>
+                        <span class="fw-bold"><span class="badge bg-warning text-dark">{{ session('success_user_created.role') }}</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Temporary Password:</span>
+                        <span class="fw-bold text-danger">{{ session('success_user_created.password') }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn btn-warning rounded-pill px-4 text-white fw-bold" data-bs-dismiss="modal" style="background: linear-gradient(135deg, #b8863a, #d4a05a); border:none;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var myModal = new bootstrap.Modal(document.getElementById('testingUserModal'));
+        myModal.show();
+    });
+</script>
+@endif
 @endsection

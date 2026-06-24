@@ -11,7 +11,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->appendToGroup('web', \App\Http\Middleware\RoleSwitchMiddleware::class);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'role.admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'role.priest' => \App\Http\Middleware\PriestMiddleware::class,
+            'role.trustee' => \App\Http\Middleware\TrusteeMiddleware::class,
+            'role.staff' => \App\Http\Middleware\StaffMiddleware::class,
+            'role.accountant' => \App\Http\Middleware\AccountantMiddleware::class,
+            'role.devotee' => \App\Http\Middleware\DevoteeMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -22,16 +22,21 @@
       </a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-person-workspace"></i> Trustees</a>
+      <a href="{{ route('admin.trustees.index') }}" class="nav-link {{ request()->routeIs('admin.trustees.*') ? 'active' : '' }}"><i class="bi bi-person-workspace"></i> Trustees</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-person-lines-fill"></i> Staff</a>
+      <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}"><i class="bi bi-person-lines-fill"></i> Staff</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-cash-stack"></i> Accountants</a>
+      <a href="{{ route('admin.leaves.index') }}" class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}"><i class="bi bi-calendar-x-fill"></i> Leaves</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-calendar-event"></i> Poojas</a>
+      <a href="{{ route('admin.accountants.index') }}" class="nav-link {{ request()->routeIs('admin.accountants.*') ? 'active' : '' }}"><i class="bi bi-cash-stack"></i> Accountants</a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.bookings.index') }}" class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}">
+        <i class="bi bi-calendar-event"></i> Pooja Bookings
+      </a>
     </li>
     <li class="nav-item">
       <a href="#" class="nav-link"><i class="bi bi-wallet2"></i> Donations</a>
@@ -43,10 +48,13 @@
       <a href="#" class="nav-link"><i class="bi bi-box-seam"></i> Inventory</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-bar-chart-fill"></i> Reports</a>
+      <a href="{{ route('admin.salaries.index') }}" class="nav-link {{ request()->routeIs('admin.salaries.*') ? 'active' : '' }}"><i class="bi bi-cash-stack"></i> Salaries</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link logout-link" id="sidebarLogoutBtn">
+      <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}"><i class="bi bi-bar-chart-fill"></i> Reports</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link logout-link" id="sidebarLogoutBtn" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#logoutModal" style="cursor: pointer;">
         <i class="bi bi-box-arrow-right"></i> Logout
       </a>
     </li>

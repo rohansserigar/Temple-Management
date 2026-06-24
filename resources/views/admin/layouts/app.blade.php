@@ -422,6 +422,7 @@
 </head>
 
 <body>
+    @include('layouts.partials.notifications')
 
     {{-- Sidebar --}}
     @include('admin.layouts.sidebar')
@@ -438,19 +439,17 @@
 <!-- LOGOUT CONFIRMATION MODAL -->
 <div class="modal fade logout-modal" id="logoutModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-content border-0 shadow-lg rounded-4" style="background: #fdfbf7; border: 1px solid #b8863a !important;">
       <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold"><i class="bi bi-box-arrow-right me-2 text-danger"></i>Confirm Logout</h5>
-        <button type="button" class="close-btn" data-bs-dismiss="modal">
-          <i class="bi bi-x-lg"></i>
-        </button>
+        <h5 class="modal-title fw-bold text-danger"><i class="bi bi-box-arrow-right me-2"></i>Confirm Logout</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body pt-3">
-        <p class="mb-0" style="font-weight: 450; color: #2d1f0e;">Are you sure you want to logout? You will be redirected to <strong>index.blade.php</strong>.</p>
+        <p class="mb-0" style="font-weight: 500; color: #2d1f0e;">Are you sure you want to logout? You will be redirected to the login page.</p>
       </div>
       <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmLogoutBtn">Logout</button>
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal" style="background:#f0ece6; border:none; color:#1e1e2a;">Cancel</button>
+        <button type="button" class="btn btn-danger rounded-pill px-4 text-white fw-bold" id="confirmLogoutBtn">Logout</button>
       </div>
     </div>
   </div>
@@ -507,7 +506,7 @@
 
     if (confirmLogoutBtn) {
       confirmLogoutBtn.addEventListener('click', function() {
-        window.location.href = 'index.blade.php';
+        window.location.href = '{{ route('logout') }}';
       });
     }
   });
@@ -516,6 +515,5 @@
 {{-- Page Specific JS --}}
 @yield('page-js')
 
-</body>
 </body>
 </html>
