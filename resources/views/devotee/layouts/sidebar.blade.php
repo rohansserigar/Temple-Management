@@ -31,6 +31,16 @@
           {{ $currentMembership->membership_name }}
       </div>
       <div class="membership-benefits">{{ $currentMembership->discount_percentage }}% Off on Poojas</div>
+      @if($devoteeRecord && $devoteeRecord->membership_end_date)
+          @php
+              $diff = strtotime($devoteeRecord->membership_end_date) - time();
+              $rem = max(0, intval(ceil($diff / (60 * 60 * 24))));
+          @endphp
+          <div class="small text-muted mt-1" style="font-size: 0.75rem; border-top: 1px dashed rgba(184, 134, 58, 0.15); padding-top: 4px;">
+              Expires: {{ date('d M Y', strtotime($devoteeRecord->membership_end_date)) }}
+              <br>({{ $rem }} days left)
+          </div>
+      @endif
   </div>
   @endif
 

@@ -42,6 +42,8 @@ public function dashboard()
 }
 
 
+    $this->initializeDevoteeMembershipDates($devotee);
+
     $membership = DB::table('memberships')
         ->where('membership_id',$devotee->membership_id)
         ->first();
@@ -103,6 +105,13 @@ public function dashboard()
 
 
 
+    $daysRemaining = null;
+    if ($devotee && $devotee->membership_id && $devotee->membership_end_date) {
+        $endDate = strtotime($devotee->membership_end_date);
+        $diff = $endDate - strtotime(date('Y-m-d'));
+        $daysRemaining = max(0, intval(round($diff / (60 * 60 * 24))));
+    }
+
     return view(
         'devotee.dashboard',
         compact(
@@ -114,7 +123,8 @@ public function dashboard()
             'totalDonation',
             'recentDonations',
             'recentBookings',
-            'events'
+            'events',
+            'daysRemaining'
         )
     );
 }
@@ -414,6 +424,250 @@ public function dashboard()
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Failed to delete devotee: ' . $e->getMessage());
+        }
+    }
+
+    private function initializeDevoteeMembershipDates($devotee)
+    {
+        if ($devotee && $devotee->membership_id && !$devotee->membership_end_date) {
+            $membership = DB::table('memberships')
+                ->where('membership_id', $devotee->membership_id)
+                ->first();
+            $months = $membership ? ($membership->duration_months ?? 1) : 1;
+            $startDate = date('Y-m-d');
+            $endDate = date('Y-m-d', strtotime("+$months months"));
+            DB::table('devotees')
+                ->where('devotee_id', $devotee->devotee_id)
+                ->update([
+                    'membership_start_date' => $startDate,
+                    'membership_end_date' => $endDate,
+                    'updated_at' => now()
+                ]);
+            $devotee->membership_start_date = $startDate;
+            $devotee->membership_end_date = $endDate;
+        }
+    }
+
+    private function getMembershipLevel($membershipId)
+    {
+        if ($membershipId == 1) return 1; // Silver
+        if ($membershipId == 2) return 2; // Gold
+        if ($membershipId == 3) return 3; // Platinum
+        return 0;
+    }
+
+    public function showPaymentPage(Request $request)
+    {
+        $user = Auth::user();
+        $devotee = DB::table('devotees')->where('user_id', $user->id)->first();
+        if (!$devotee) {
+            return redirect()->route('devotee.dashboard')->with('error', 'Devotee profile not found.');
+        }
+
+        $this->initializeDevoteeMembershipDates($devotee);
+
+        $type = $request->get('type');
+        $amount = 0;
+        $title = '';
+        $remarks = '';
+
+        if ($type === 'pooja') {
+            $bookingIds = explode(',', $request->get('booking_ids', ''));
+            $bookings = DB::table('pooja_bookings')
+                ->whereIn('booking_id', $bookingIds)
+                ->where('devotee_id', $devotee->devotee_id)
+                ->get();
+
+            if ($bookings->isEmpty()) {
+                return redirect()->route('devotee.dashboard')->with('error', 'No valid pending bookings found.');
+            }
+
+            $amount = $bookings->sum('total_amount');
+            $title = 'Pooja Booking Payment';
+            $remarks = 'Pooja Booking #' . implode(', #', $bookingIds);
+        } elseif ($type === 'donation') {
+            $amount = floatval($request->get('amount', 0));
+            $purpose = $request->get('purpose', 'General Temple Fund');
+            if ($amount <= 0) {
+                return redirect()->route('devotee.dashboard')->with('error', 'Invalid donation amount.');
+            }
+            $title = 'Temple Donation';
+            $remarks = 'Donation for ' . $purpose;
+        } elseif ($type === 'membership') {
+            $membershipId = $request->get('membership_id');
+            $membershipPlan = DB::table('memberships')->where('membership_id', $membershipId)->first();
+            if (!$membershipPlan) {
+                return redirect()->route('devotee.dashboard')->with('error', 'Invalid membership plan.');
+            }
+
+            // Check active membership compatibility
+            $daysRemaining = null;
+            if ($devotee->membership_id && $devotee->membership_end_date) {
+                $endDate = strtotime($devotee->membership_end_date);
+                $diff = $endDate - strtotime(date('Y-m-d'));
+                $daysRemaining = max(0, intval(round($diff / (60 * 60 * 24))));
+            }
+
+            $activeLevel = 0;
+            if ($devotee->membership_id && $daysRemaining > 0) {
+                $activeLevel = $this->getMembershipLevel($devotee->membership_id);
+            }
+
+            $newLevel = $this->getMembershipLevel($membershipId);
+
+            if ($activeLevel > 0 && $newLevel <= $activeLevel) {
+                return redirect()->route('devotee.dashboard')->with('error', 'You cannot purchase a plan lower than or equal to your current active tier until it expires.');
+            }
+
+            $amount = $membershipPlan->membership_fee;
+            $title = $membershipPlan->membership_name . ' Membership Subscription';
+            $remarks = $membershipPlan->membership_name . ' subscription';
+        } else {
+            return redirect()->route('devotee.dashboard')->with('error', 'Invalid payment type.');
+        }
+
+        // Generate dynamic UPI payment URL
+        $upiString = "upi://pay?pa=rohandevadigapithrodi-1@oksbi&pn=" . urlencode("Shree Mandir") . "&am=" . number_format($amount, 2, '.', '') . "&cu=INR&tn=" . urlencode($remarks);
+        $qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($upiString);
+
+        return view('devotee.payment', compact('user', 'devotee', 'type', 'amount', 'title', 'remarks', 'qrCodeUrl', 'request'));
+    }
+
+    public function processPayment(Request $request)
+    {
+        $user = Auth::user();
+        $devotee = DB::table('devotees')->where('user_id', $user->id)->first();
+        if (!$devotee) {
+            return redirect()->route('devotee.dashboard')->with('error', 'Devotee profile not found.');
+        }
+
+        $this->initializeDevoteeMembershipDates($devotee);
+
+        $type = $request->input('type');
+        
+        DB::beginTransaction();
+        try {
+            if ($type === 'pooja') {
+                $bookingIds = explode(',', $request->input('booking_ids', ''));
+                $bookings = DB::table('pooja_bookings')
+                    ->whereIn('booking_id', $bookingIds)
+                    ->where('devotee_id', $devotee->devotee_id)
+                    ->get();
+
+                if ($bookings->isEmpty()) {
+                    return redirect()->route('devotee.dashboard')->with('error', 'No bookings found.');
+                }
+
+                // Update booking status and payment status
+                DB::table('pooja_bookings')
+                    ->whereIn('booking_id', $bookingIds)
+                    ->update([
+                        'payment_status' => 'Paid',
+                        'booking_status' => 'Confirmed',
+                        'updated_at' => now()
+                    ]);
+
+                // Update booking payments status
+                DB::table('booking_payments')
+                    ->whereIn('booking_id', $bookingIds)
+                    ->update([
+                        'status' => 'Paid',
+                        'updated_at' => now()
+                    ]);
+
+                // Write to status logs for each booking
+                foreach ($bookingIds as $bId) {
+                    $b = $bookings->firstWhere('booking_id', intval($bId));
+                    DB::table('booking_status_logs')->insert([
+                        'booking_id' => $bId,
+                        'status_from' => $b ? $b->booking_status : 'Pending',
+                        'status_to' => 'Confirmed',
+                        'changed_by' => $user->id,
+                        'remarks' => 'Payment completed via UPI QR code. Status auto-confirmed.',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+
+                DB::commit();
+                return redirect()->route('devotee.dashboard')
+                    ->with('success', 'Payment successful! Your bookings have been paid and confirmed.');
+            } elseif ($type === 'donation') {
+                $amount = floatval($request->input('amount'));
+                $purpose = $request->input('purpose');
+                
+                DB::table('donations')->insert([
+                    'devotee_id' => $devotee->devotee_id,
+                    'amount' => $amount,
+                    'payment_mode' => 'UPI',
+                    'transaction_id' => 'TXN' . strtoupper(uniqid()),
+                    'remarks' => 'Donation for ' . $purpose . ' (UPI QR)',
+                    'donation_date' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                DB::commit();
+                return redirect()->route('devotee.dashboard')
+                    ->with('success', 'Thank you! Your donation of ₹' . number_format($amount, 2) . ' has been received successfully.');
+            } elseif ($type === 'membership') {
+                $membershipId = $request->input('membership_id');
+                $membershipPlan = DB::table('memberships')->where('membership_id', $membershipId)->first();
+                if (!$membershipPlan) {
+                    return redirect()->route('devotee.dashboard')->with('error', 'Invalid membership plan.');
+                }
+
+                // Check active membership
+                $daysRemaining = null;
+                if ($devotee->membership_id && $devotee->membership_end_date) {
+                    $endDate = strtotime($devotee->membership_end_date);
+                    $diff = $endDate - strtotime(date('Y-m-d'));
+                    $daysRemaining = max(0, intval(round($diff / (60 * 60 * 24))));
+                }
+
+                $activeLevel = 0;
+                if ($devotee->membership_id && $daysRemaining > 0) {
+                    $activeLevel = $this->getMembershipLevel($devotee->membership_id);
+                }
+
+                $newLevel = $this->getMembershipLevel($membershipId);
+
+                // If user has an active membership and tries to downgrade or buy same tier
+                if ($activeLevel > 0 && $newLevel <= $activeLevel) {
+                    return redirect()->route('devotee.dashboard')->with('error', 'You cannot purchase a plan lower than or equal to your current active tier until it expires.');
+                }
+
+                // Calculate dates
+                $months = $membershipPlan->duration_months ?? 1;
+                $startDate = date('Y-m-d');
+                
+                // If it is an upgrade (lower to higher level)
+                if ($activeLevel > 0 && $newLevel > $activeLevel) {
+                    $endDate = date('Y-m-d', strtotime("+$months months +5 days"));
+                } else {
+                    $endDate = date('Y-m-d', strtotime("+$months months"));
+                }
+
+                DB::table('devotees')
+                    ->where('devotee_id', $devotee->devotee_id)
+                    ->update([
+                        'membership_id' => $membershipId,
+                        'membership_start_date' => $startDate,
+                        'membership_end_date' => $endDate,
+                        'updated_at' => now()
+                    ]);
+
+                DB::commit();
+
+                $bonusMsg = ($activeLevel > 0 && $newLevel > $activeLevel) ? " with a bonus of 5 extra days!" : ".";
+                return redirect()->route('devotee.dashboard')
+                    ->with('success', 'Subscription successful! You are now a ' . $membershipPlan->membership_name . ' member' . $bonusMsg);
+            } else {
+                return redirect()->route('devotee.dashboard')->with('error', 'Invalid payment type.');
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('devotee.dashboard')->with('error', 'Payment failed: ' . $e->getMessage());
         }
     }
 }

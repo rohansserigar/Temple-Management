@@ -274,6 +274,10 @@ Route::middleware(['auth', 'role.devotee'])->group(function () {
     Route::post('/devotee/book-pooja', [BookingController::class, 'storeBooking'])->name('devotee.book-pooja.post');
     Route::post('/devotee/book_pooja', [BookingController::class, 'storeBooking']);
     Route::get('/devotee/booking/receipt/{id}', [BookingController::class, 'downloadReceipt'])->name('devotee.bookings.receipt');
+
+    // Devotee Payment Routes
+    Route::get('/devotee/payment', [DevoteeController::class, 'showPaymentPage'])->name('devotee.payment');
+    Route::post('/devotee/payment/process', [DevoteeController::class, 'processPayment'])->name('devotee.payment.process');
 });
 
 // ============================================

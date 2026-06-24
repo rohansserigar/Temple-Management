@@ -294,6 +294,13 @@ class BookingController extends Controller
 
             DB::commit();
 
+            if (in_array($request->payment_method, ['UPI', 'Razorpay'])) {
+                return redirect()->route('devotee.payment', [
+                    'type' => 'pooja',
+                    'booking_ids' => implode(',', $createdBookings)
+                ]);
+            }
+
             return redirect()->route('devotee.dashboard')
                 ->with('success', 'Bookings placed successfully! Payment status is Pending.');
 

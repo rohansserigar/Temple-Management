@@ -26,7 +26,7 @@
   body {
     background-color: #fdfaf2 !important;
   }
-  .card, .table-wrap, .stat-card, .quick-link-card {
+  .card:not(.bg-custom), .table-wrap, .stat-card, .quick-link-card {
     border: 1px solid rgba(184, 134, 58, 0.15) !important;
     background-color: #ffffff;
     border-radius: 20px !important;
@@ -232,6 +232,11 @@
                 <a href="{{ route('devotee.bookings.receipt', $booking->booking_id) }}" class="btn btn-sm btn-outline-warning rounded-pill px-3 py-1">
                   <i class="bi bi-download"></i> Receipt
                 </a>
+                @if($booking->payment_status === 'Pending')
+                <a href="{{ route('devotee.payment', ['type' => 'pooja', 'booking_ids' => $booking->booking_id]) }}" class="btn btn-sm btn-success rounded-pill px-3 py-1 ms-1">
+                  <i class="bi bi-credit-card"></i> Pay Now
+                </a>
+                @endif
               </td>
             </tr>
             @empty
@@ -286,21 +291,22 @@
         <div class="card border-0 shadow-sm rounded-4 p-4 border-start border-warning border-3" style="background: white;">
           <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Make a Donation</h5>
           <p class="text-muted small">Contribute generously to the maintenance of the temple and ongoing development programs.</p>
-          <form onsubmit="alert('Thank you for your support! Custom payment gateway integration will process ₹' + document.getElementById('donAmt').value); return false;">
+          <form action="{{ route('devotee.payment') }}" method="GET">
+            <input type="hidden" name="type" value="donation">
             <div class="mb-3">
               <label class="form-label fw-semibold">Amount (₹)</label>
-              <input type="number" id="donAmt" class="form-control rounded-3" value="1000" min="10" required>
+              <input type="number" name="amount" id="donAmt" class="form-control rounded-3" value="1000" min="10" required>
             </div>
             <div class="mb-3">
               <label class="form-label fw-semibold">Purpose</label>
-              <select class="form-select rounded-3">
-                <option>General Temple Fund</option>
-                <option>Annadhanam (Free Meals)</option>
-                <option>Goshala (Cow Shelter)</option>
-                <option>Festival Celebrations</option>
+              <select name="purpose" class="form-select rounded-3">
+                <option value="General Temple Fund">General Temple Fund</option>
+                <option value="Annadhanam (Free Meals)">Annadhanam (Free Meals)</option>
+                <option value="Goshala (Cow Shelter)">Goshala (Cow Shelter)</option>
+                <option value="Festival Celebrations">Festival Celebrations</option>
               </select>
             </div>
-            <button class="btn btn-warning w-100 rounded-pill fw-semibold">Donate Now</button>
+            <button type="submit" class="btn btn-warning w-100 rounded-pill fw-semibold">Donate Now</button>
           </form>
         </div>
       </div>
@@ -308,6 +314,14 @@
 
   @elseif(request()->get('tab') == 'membership')
     <!-- MEMBERSHIP TAB -->
+    @php
+      $activeLevel = 0;
+      if ($membership && isset($daysRemaining) && $daysRemaining > 0) {
+          if ($membership->membership_name === 'Silver') $activeLevel = 1;
+          elseif ($membership->membership_name === 'Gold') $activeLevel = 2;
+          elseif ($membership->membership_name === 'Platinum') $activeLevel = 3;
+      }
+    @endphp
     <div class="row g-4">
       <div class="col-md-4">
         <div class="membership-card silver {{ ($membership && $membership->membership_name === 'Silver') ? 'active-tier' : '' }}">
@@ -323,9 +337,17 @@
             <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i> Monthly Prasadam</li>
           </ul>
           @if($membership && $membership->membership_name === 'Silver')
-            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold" disabled>Active Membership</button>
+            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold mb-2" disabled>Active Membership</button>
+            <div class="text-center small text-success fw-semibold">
+              Expires: {{ date('d M Y', strtotime($devotee->membership_end_date)) }}
+              @if(isset($daysRemaining))
+                <br>({{ $daysRemaining }} days remaining)
+              @endif
+            </div>
+          @elseif($activeLevel > 1)
+            <button class="btn btn-outline-secondary w-100 rounded-pill mt-4 fw-semibold" disabled><i class="bi bi-lock-fill"></i> Locked (Higher Tier Active)</button>
           @else
-            <button class="btn btn-outline-warning w-100 rounded-pill mt-4 fw-semibold" onclick="alert('Silver membership upgrade initiated.')">Subscribe Now</button>
+            <a href="{{ route('devotee.payment', ['type' => 'membership', 'membership_id' => 1]) }}" class="btn btn-outline-warning w-100 rounded-pill mt-4 fw-semibold">Subscribe Now</a>
           @endif
         </div>
       </div>
@@ -343,9 +365,17 @@
             <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i> Weekly Prasadam Delivery</li>
           </ul>
           @if($membership && $membership->membership_name === 'Gold')
-            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold" disabled>Active Membership</button>
+            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold mb-2" disabled>Active Membership</button>
+            <div class="text-center small text-success fw-semibold">
+              Expires: {{ date('d M Y', strtotime($devotee->membership_end_date)) }}
+              @if(isset($daysRemaining))
+                <br>({{ $daysRemaining }} days remaining)
+              @endif
+            </div>
+          @elseif($activeLevel > 2)
+            <button class="btn btn-outline-secondary w-100 rounded-pill mt-4 fw-semibold" disabled><i class="bi bi-lock-fill"></i> Locked (Higher Tier Active)</button>
           @else
-            <button class="btn btn-warning w-100 rounded-pill mt-4 fw-semibold" onclick="alert('Gold membership upgrade initiated.')">Subscribe Now</button>
+            <a href="{{ route('devotee.payment', ['type' => 'membership', 'membership_id' => 2]) }}" class="btn btn-warning w-100 rounded-pill mt-4 fw-semibold">Subscribe Now</a>
           @endif
         </div>
       </div>
@@ -363,9 +393,15 @@
             <li class="mb-2"><i class="bi bi-check-circle-fill text-warning me-2"></i> Personal Temple Guide</li>
           </ul>
           @if($membership && $membership->membership_name === 'Platinum')
-            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold" disabled>Active Membership</button>
+            <button class="btn btn-success w-100 rounded-pill mt-4 fw-semibold mb-2" disabled>Active Membership</button>
+            <div class="text-center small text-success fw-semibold">
+              Expires: {{ date('d M Y', strtotime($devotee->membership_end_date)) }}
+              @if(isset($daysRemaining))
+                <br>({{ $daysRemaining }} days remaining)
+              @endif
+            </div>
           @else
-            <button class="btn btn-dark w-100 rounded-pill mt-4 fw-semibold" onclick="alert('Platinum membership upgrade initiated.')">Subscribe Now</button>
+            <a href="{{ route('devotee.payment', ['type' => 'membership', 'membership_id' => 3]) }}" class="btn btn-dark w-100 rounded-pill mt-4 fw-semibold">Subscribe Now</a>
           @endif
         </div>
       </div>
@@ -502,12 +538,12 @@
   @else
     <!-- DEFAULT DASHBOARD VIEW -->
     <!-- Welcome Banner -->
-    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #b8863a, #f27a1a);">
+    <div class="card bg-custom border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #b8863a, #f27a1a) !important;">
         <div class="position-absolute" style="right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.06);"></div>
         <div class="position-absolute" style="right: 50px; bottom: -80px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
         <div class="row align-items-center position-relative z-1">
             <div class="col-md-8">
-                <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-3 py-2 mb-3"><i class="bi bi-star-fill me-1"></i> Welcome to Devotee Portal</span>
+                <span class="badge rounded-pill px-3 py-2 mb-3" style="background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;"><i class="bi bi-star-fill me-1"></i> Welcome to Devotee Portal</span>
                 <h1 class="fw-bold display-6 mb-2">Hare Krishna, {{ $user->name }} 🙏</h1>
                 <p class="mb-0 opacity-90">Step into the divine workspace of Temple ERP. Schedule rituals, view upcoming temple festivals, and manage your contributions seamlessly.</p>
             </div>
@@ -636,13 +672,18 @@
                         $icon = '💎';
                     }
                 @endphp
-                <div class="card border-0 shadow rounded-4 text-white position-relative overflow-hidden mb-4" style="background: {{ $gradient }}; min-height: 250px;">
+                <div class="card bg-custom border-0 shadow rounded-4 text-white position-relative overflow-hidden mb-4" style="background: {{ $gradient }} !important; min-height: 250px;">
                     <div class="position-absolute" style="right: -20px; top: -20px; font-size: 8rem; opacity: 0.15;">{{ $icon }}</div>
                     <div class="card-body p-4 d-flex flex-column justify-content-between position-relative z-1">
                         <div>
-                            <span class="badge bg-white bg-opacity-20 rounded-pill px-3 py-1 mb-2">{{ $membership->membership_name }} Tier</span>
+                            <span class="badge rounded-pill px-3 py-1 mb-2" style="background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;">{{ $membership->membership_name }} Tier</span>
                             <h3 class="fw-bold mb-1">{{ $membership->membership_name }} Plan</h3>
-                            <p class="small text-white-50 mb-3">Expires: {{ $devotee->membership_end_date ? date('d M Y', strtotime($devotee->membership_end_date)) : 'N/A' }}</p>
+                            <p class="small text-white-50 mb-3">
+                                Expires: {{ $devotee->membership_end_date ? date('d M Y', strtotime($devotee->membership_end_date)) : 'N/A' }}
+                                @if(isset($daysRemaining) && $daysRemaining !== null)
+                                    <span class="badge bg-light text-dark ms-1" style="font-size: 0.7rem;">{{ $daysRemaining }} days remaining</span>
+                                @endif
+                            </p>
                             <ul class="list-unstyled mb-0 small opacity-90">
                                 <li class="mb-1"><i class="bi bi-patch-check-fill me-1"></i> Exclusive discounts on Poojas</li>
                                 <li class="mb-1"><i class="bi bi-patch-check-fill me-1"></i> Priority booking access</li>
@@ -655,7 +696,7 @@
                     </div>
                 </div>
             @else
-                <div class="card border-0 shadow-sm rounded-4 position-relative overflow-hidden mb-4" style="background: linear-gradient(135deg, #fffdf8, #ebdcc5); border: 1px solid #ebdcc5; min-height: 250px;">
+                <div class="card bg-custom border-0 shadow-sm rounded-4 position-relative overflow-hidden mb-4" style="background: linear-gradient(135deg, #fffdf8, #ebdcc5); border: 1px solid #ebdcc5; min-height: 250px;">
                     <div class="card-body p-4 d-flex flex-column justify-content-between">
                         <div>
                             <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1 mb-2">Membership Portal</span>
