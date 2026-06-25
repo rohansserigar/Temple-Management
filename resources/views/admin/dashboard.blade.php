@@ -218,10 +218,14 @@
                     </a>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <button class="quick-btn w-100"><i class="bi bi-coin"></i> Manage Donation</button>
+                    <a href="{{ route('admin.donations.index') }}" class="quick-btn w-100 text-decoration-none d-block text-center">
+                        <i class="bi bi-coin"></i> Manage Donation
+                    </a>
                 </div>
                 <div class="col-md-3 col-sm-6">
-                    <button class="quick-btn w-100"><i class="bi bi-calendar-plus"></i> Manage Event</button>
+                    <a href="{{ route('admin.events.index') }}" class="quick-btn w-100 text-decoration-none d-block text-center">
+                        <i class="bi bi-calendar-plus"></i> Manage Event
+                    </a>
                 </div>
             </div>
         </div>

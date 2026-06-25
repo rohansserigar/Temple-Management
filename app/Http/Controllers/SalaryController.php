@@ -48,6 +48,56 @@ class SalaryController extends Controller
             ->pluck('user_id')
             ->toArray();
 
+        // Calculate total amount required to pay the previous month's salary (excluding already sanctioned)
+        $totalRequiredPrevMonth = 0;
+        foreach ($employees as $emp) {
+            $isPaid = in_array($emp->user_id, $paidUserIds);
+            if (!$isPaid) {
+                $totalRequiredPrevMonth += max(0.00, $emp->base_salary + $emp->wallet_balance);
+            }
+        }
+
+        // Generate list of 4 recent months (e.g. 2 months ago, previous month, current month, next month)
+        $monthsList = [];
+        for ($i = -2; $i <= 1; $i++) {
+            $mTime = strtotime("{$i} month");
+            $mVal = date('Y-m', $mTime);
+            $mName = date('F Y', $mTime);
+            
+            // Check if already paid
+            $isPaid = DB::table('salary_payouts')->where('salary_month', $mVal)->exists();
+            
+            if ($isPaid) {
+                $amount = DB::table('salary_payouts')->where('salary_month', $mVal)->sum('total_paid');
+                $status = 'Sanctioned & Paid';
+            } else {
+                // If not paid, estimate based on current employee database
+                $priestAmt = DB::table('priests')->sum('monthly_salary') + DB::table('priests')->sum('wallet_balance');
+                $staffAmt = DB::table('staff')->sum('salary') + DB::table('staff')->sum('wallet_balance');
+                $accAmt = DB::table('accountants')->sum('salary');
+                $amount = max(0.00, $priestAmt) + max(0.00, $staffAmt) + $accAmt;
+                
+                if ($mVal >= date('Y-m')) {
+                    $status = 'Accruing (Payable on ' . date('M 1, Y', strtotime('+1 month', strtotime($mVal . '-01'))) . ')';
+                } else {
+                    $status = 'Pending Sanction';
+                }
+            }
+
+            // Can be sanctioned if it is a past month and not paid
+            $canSanction = ($mVal < date('Y-m')) && !$isPaid;
+
+            $monthsList[] = [
+                'val' => $mVal,
+                'name' => $mName,
+                'amount' => $amount,
+                'status' => $status,
+                'is_paid' => $isPaid,
+                'can_sanction' => $canSanction,
+                'payable_date' => date('Y-m-d', strtotime('+1 month', strtotime($mVal . '-01')))
+            ];
+        }
+
         // Payout history
         $payoutHistory = DB::table('salary_payouts')
             ->join('users', 'salary_payouts.user_id', '=', 'users.id')
@@ -55,12 +105,17 @@ class SalaryController extends Controller
             ->orderBy('salary_payouts.created_at', 'desc')
             ->get();
 
-        return view('admin.salaries', compact('employees', 'prevMonthVal', 'prevMonthName', 'paidUserIds', 'payoutHistory'));
+        return view('admin.salaries', compact(
+            'employees',
+            'prevMonthVal',
+            'prevMonthName',
+            'paidUserIds',
+            'totalRequiredPrevMonth',
+            'monthsList',
+            'payoutHistory'
+        ));
     }
 
-    /**
-     * Sanction payouts for the previous month.
-     */
     public function sanction(Request $request)
     {
         $user = Auth::user();
@@ -68,8 +123,27 @@ class SalaryController extends Controller
             return redirect()->back()->with('error', 'Unauthorized access.');
         }
 
-        $prevMonthVal = date('Y-m', strtotime('first day of last month'));
-        $prevMonthName = date('F Y', strtotime('first day of last month'));
+        $request->validate([
+            'salary_month' => 'required|date_format:Y-m',
+        ]);
+
+        $salaryMonth = $request->input('salary_month');
+        $currentMonth = date('Y-m');
+
+        if ($salaryMonth >= $currentMonth) {
+            $payableDate = date('F 1, Y', strtotime('+1 month', strtotime($salaryMonth . '-01')));
+            return redirect()->back()->with('error', "Salary for " . date('F Y', strtotime($salaryMonth . '-01')) . " is not payable yet. It will become payable on " . $payableDate . ".");
+        }
+
+        $monthName = date('F Y', strtotime($salaryMonth . '-01'));
+
+        $alreadyPaid = DB::table('salary_payouts')
+            ->where('salary_month', $salaryMonth)
+            ->exists();
+
+        if ($alreadyPaid) {
+            return redirect()->back()->with('error', "Salary payouts for {$monthName} have already been sanctioned.");
+        }
 
         // Fetch Priests, Staff and Accountants
         $priests = DB::table('priests')
@@ -93,30 +167,20 @@ class SalaryController extends Controller
 
             // Process Priests
             foreach ($priests as $p) {
-                // Check if already paid
-                $exists = DB::table('salary_payouts')
-                    ->where('user_id', $p->user_id)
-                    ->where('salary_month', $prevMonthVal)
-                    ->exists();
-
-                if ($exists) continue;
-
                 $walletAmount = $p->wallet_balance;
                 $totalPaid = max(0.00, $p->base_salary + $walletAmount);
 
-                // Insert salary payout record
                 DB::table('salary_payouts')->insert([
                     'user_id' => $p->user_id,
                     'role' => 'Priest',
-                    'salary_month' => $prevMonthVal,
+                    'salary_month' => $salaryMonth,
                     'base_salary' => $p->base_salary,
                     'wallet_amount' => $walletAmount,
                     'total_paid' => $totalPaid,
                     'payment_date' => date('Y-m-d'),
                     'payment_status' => 'Paid',
-                    'remarks' => "Salary sanctioned for {$prevMonthName}. Wallet balance of ₹{$walletAmount} adjusted and cleared.",
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'remarks' => "Salary sanctioned for {$monthName}. Wallet balance of ₹{$walletAmount} adjusted and cleared.",
+                    'created_at' => now()
                 ]);
 
                 // Clear Priest Wallet
@@ -131,7 +195,7 @@ class SalaryController extends Controller
                         'priest_id' => $p->priest_id,
                         'amount' => abs($walletAmount),
                         'transaction_type' => ($walletAmount > 0) ? 'Debit' : 'Credit',
-                        'remarks' => "Wallet balance cleared to 0.00 upon salary sanction for {$prevMonthName}",
+                        'remarks' => "Wallet balance cleared to 0.00 upon salary sanction for {$monthName}",
                         'created_at' => now()
                     ]);
                 }
@@ -141,28 +205,20 @@ class SalaryController extends Controller
 
             // Process Staff
             foreach ($staff as $s) {
-                $exists = DB::table('salary_payouts')
-                    ->where('user_id', $s->user_id)
-                    ->where('salary_month', $prevMonthVal)
-                    ->exists();
-
-                if ($exists) continue;
-
                 $walletAmount = $s->wallet_balance;
                 $totalPaid = max(0.00, $s->base_salary + $walletAmount);
 
                 DB::table('salary_payouts')->insert([
                     'user_id' => $s->user_id,
                     'role' => 'Staff',
-                    'salary_month' => $prevMonthVal,
+                    'salary_month' => $salaryMonth,
                     'base_salary' => $s->base_salary,
                     'wallet_amount' => $walletAmount,
                     'total_paid' => $totalPaid,
                     'payment_date' => date('Y-m-d'),
                     'payment_status' => 'Paid',
-                    'remarks' => "Salary sanctioned for {$prevMonthName}. Wallet balance of ₹{$walletAmount} adjusted and cleared.",
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'remarks' => "Salary sanctioned for {$monthName}. Wallet balance of ₹{$walletAmount} adjusted and cleared.",
+                    'created_at' => now()
                 ]);
 
                 DB::table('staff')->where('staff_id', $s->staff_id)->update([
@@ -175,7 +231,7 @@ class SalaryController extends Controller
                         'staff_id' => $s->staff_id,
                         'amount' => abs($walletAmount),
                         'transaction_type' => ($walletAmount > 0) ? 'Debit' : 'Credit',
-                        'remarks' => "Wallet balance cleared to 0.00 upon salary sanction for {$prevMonthName}",
+                        'remarks' => "Wallet balance cleared to 0.00 upon salary sanction for {$monthName}",
                         'created_at' => now()
                     ]);
                 }
@@ -185,32 +241,24 @@ class SalaryController extends Controller
 
             // Process Accountants
             foreach ($accountants as $a) {
-                $exists = DB::table('salary_payouts')
-                    ->where('user_id', $a->user_id)
-                    ->where('salary_month', $prevMonthVal)
-                    ->exists();
-
-                if ($exists) continue;
-
                 DB::table('salary_payouts')->insert([
                     'user_id' => $a->user_id,
                     'role' => 'Accountant',
-                    'salary_month' => $prevMonthVal,
+                    'salary_month' => $salaryMonth,
                     'base_salary' => $a->base_salary,
                     'wallet_amount' => 0.00,
                     'total_paid' => $a->base_salary,
                     'payment_date' => date('Y-m-d'),
                     'payment_status' => 'Paid',
-                    'remarks' => "Salary sanctioned for {$prevMonthName}.",
-                    'created_at' => now(),
-                    'updated_at' => now()
+                    'remarks' => "Salary sanctioned for {$monthName}.",
+                    'created_at' => now()
                 ]);
 
                 $sanctionedCount++;
             }
 
             DB::commit();
-            return redirect()->back()->with('success', "Successfully sanctioned salary payouts for {$sanctionedCount} employees for {$prevMonthName}.");
+            return redirect()->back()->with('success', "Successfully sanctioned salary payouts for {$sanctionedCount} employees for {$monthName}.");
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', "Failed to sanction payouts: " . $e->getMessage());
@@ -228,17 +276,21 @@ class SalaryController extends Controller
         }
 
         // 1. Attendance report
-        $priestAttendance = DB::table('priest_attendance')
-            ->select('attendance_date', DB::raw("SUM(CASE WHEN attendance_status='Present' THEN 1 ELSE 0 END) as present_count"), DB::raw("SUM(worked_hours) as total_hours"))
-            ->groupBy('attendance_date')
-            ->orderBy('attendance_date', 'desc')
+        $priestAttendance = DB::table('attendances')
+            ->join('users', 'attendances.user_id', '=', 'users.id')
+            ->select('attendances.date as attendance_date', DB::raw("COUNT(DISTINCT attendances.user_id) as present_count"), DB::raw("SUM(attendances.worked_minutes) / 60 as total_hours"))
+            ->where('users.role', 'Priest')
+            ->groupBy('attendances.date')
+            ->orderBy('attendances.date', 'desc')
             ->limit(30)
             ->get();
 
-        $staffAttendance = DB::table('staff_attendance')
-            ->select('attendance_date', DB::raw("SUM(CASE WHEN attendance_status='Present' THEN 1 ELSE 0 END) as present_count"), DB::raw("SUM(worked_hours) as total_hours"))
-            ->groupBy('attendance_date')
-            ->orderBy('attendance_date', 'desc')
+        $staffAttendance = DB::table('attendances')
+            ->join('users', 'attendances.user_id', '=', 'users.id')
+            ->select('attendances.date as attendance_date', DB::raw("COUNT(DISTINCT attendances.user_id) as present_count"), DB::raw("SUM(attendances.worked_minutes) / 60 as total_hours"))
+            ->where('users.role', 'Staff')
+            ->groupBy('attendances.date')
+            ->orderBy('attendances.date', 'desc')
             ->limit(30)
             ->get();
 
@@ -289,6 +341,36 @@ class SalaryController extends Controller
                 ->get();
         }
 
+        // 6. Events Report data
+        $eventsCountSummary = DB::table('events')
+            ->select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->get();
+        $recentEventsList = DB::table('events')
+            ->orderBy('event_date', 'desc')
+            ->orderBy('start_time', 'desc')
+            ->limit(20)
+            ->get();
+
+        // 7. Inventory Report data
+        $inventoryLowStockList = [];
+        $inventoryTransactionsList = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('inventories')) {
+            $inventoryLowStockList = DB::table('inventories')
+                ->whereRaw('quantity <= minimum_threshold')
+                ->orderBy('quantity', 'asc')
+                ->get();
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('inventory_transactions')) {
+            $inventoryTransactionsList = DB::table('inventory_transactions')
+                ->join('inventories', 'inventory_transactions.item_id', '=', 'inventories.item_id')
+                ->select('inventory_transactions.*', 'inventories.item_name', 'inventories.unit')
+                ->orderBy('transaction_date', 'desc')
+                ->orderBy('inventory_transactions.created_at', 'desc')
+                ->limit(30)
+                ->get();
+        }
+
         return view('admin.reports', compact(
             'priestAttendance',
             'staffAttendance',
@@ -297,7 +379,11 @@ class SalaryController extends Controller
             'staffWalletTx',
             'poojaCompletionSummary',
             'bookingsEarnings',
-            'donationsEarnings'
+            'donationsEarnings',
+            'eventsCountSummary',
+            'recentEventsList',
+            'inventoryLowStockList',
+            'inventoryTransactionsList'
         ));
     }
 }

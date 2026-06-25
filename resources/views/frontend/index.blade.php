@@ -136,6 +136,31 @@
       background: rgba(255, 111, 0, 0.06);
     }
 
+    @keyframes pulseEhundi {
+      0% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+      }
+    }
+    .navbar-custom .nav-link-ehundi {
+      border: 1.5px solid #d4af37 !important;
+      background: rgba(212, 175, 55, 0.1) !important;
+      color: #b8863a !important;
+      font-weight: 700 !important;
+      animation: pulseEhundi 2.5s infinite;
+      padding: 0.5rem 1.2rem !important;
+    }
+    .navbar-custom .nav-link-ehundi:hover {
+      background: #d4af37 !important;
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3) !important;
+    }
+
     /* ----- buttons ----- */
     .btn-gold {
       background: var(--gold-gradient);
@@ -870,6 +895,11 @@
           <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
           <li class="nav-item"><a class="nav-link" href="#poojas">Book Pooja</a></li>
           <li class="nav-item"><a class="nav-link" href="#donations">Donations</a></li>
+          <li class="nav-item ms-lg-2">
+            <a class="nav-link nav-link-ehundi" href="{{ route('ehundi.show') }}">
+              🪔 e-Hundi
+            </a>
+          </li>
 
           <!-- Login or Dashboard Authentication -->
           @auth
@@ -1409,7 +1439,7 @@
       </div>
 
       <div class="pt-4 border-top border-secondary text-center text-muted small" style="border-color: rgba(255,255,255,0.08) !important;">
-        <p class="mb-0">© 2026 Shree Mandir Trust — All Rights Reserved. Crafted with deep devotion and dedication. 🙏</p>
+        <p style="color: gray"  class="mb-0">© 2026 Shree Mandir Trust — All Rights Reserved. Crafted with deep devotion and dedication. </p>
       </div>
     </div>
   </footer>

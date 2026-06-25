@@ -42,7 +42,7 @@ class BookingController extends Controller
         // Get active priests for Gold/Platinum preferred selection
         $priestQuery = DB::table('priests')
             ->join('users', 'priests.user_id', '=', 'users.id')
-            ->where('priests.employment_status', 'Active')
+            ->whereIn('priests.employment_status', ['Active', 'On Leave'])
             ->select('priests.*', 'users.name');
 
         if (Auth::check()) {
@@ -72,7 +72,7 @@ class BookingController extends Controller
         // Get active priests
         $priestsQuery = DB::table('priests')
             ->join('users', 'priests.user_id', '=', 'users.id')
-            ->where('priests.employment_status', 'Active')
+            ->whereIn('priests.employment_status', ['Active', 'On Leave'])
             ->select('priests.*', 'users.name');
 
         if (Auth::check()) {
@@ -436,8 +436,13 @@ class BookingController extends Controller
         // Get active priests for manual overrides
         $priests = DB::table('priests')
             ->join('users', 'priests.user_id', '=', 'users.id')
-            ->where('priests.employment_status', 'Active')
+            ->whereIn('priests.employment_status', ['Active', 'On Leave'])
             ->select('priests.*', 'users.name')
+            ->get();
+
+        // Get all approved leave requests
+        $leaves = DB::table('leave_requests')
+            ->where('status', 'Approved')
             ->get();
 
         // Utilization metrics
@@ -448,6 +453,7 @@ class BookingController extends Controller
         return view('admin.manage-bookings', compact(
             'bookings',
             'priests',
+            'leaves',
             'totalBookings',
             'totalRevenue',
             'totalDiscount'
@@ -697,7 +703,7 @@ class BookingController extends Controller
     private function autoAssignPriest($poojaId, $date, $time)
     {
         $activePriestsQuery = DB::table('priests')
-            ->where('employment_status', 'Active');
+            ->whereIn('employment_status', ['Active', 'On Leave']);
 
         if (Auth::check()) {
             $activePriestsQuery->where('user_id', '!=', Auth::id());
@@ -744,7 +750,7 @@ class BookingController extends Controller
         if (!$pooja) return false;
 
         $priest = DB::table('priests')->where('priest_id', $priestId)->first();
-        if (!$priest || $priest->employment_status !== 'Active') return false;
+        if (!$priest || !in_array($priest->employment_status, ['Active', 'On Leave'])) return false;
 
         // Check if the priest has an approved leave request covering the selected date
         $onLeave = DB::table('leave_requests')

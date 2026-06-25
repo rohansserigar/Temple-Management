@@ -565,6 +565,18 @@
 @section('page-js')
 <script>
     $(document).ready(function() {
+        // Embed approved leaves
+        const approvedLeaves = {!! json_encode($leaves) !!};
+
+        // Capture all original options from the priest select dropdown
+        const allPriestOptions = [];
+        $('#assign_new_priest option').each(function() {
+            allPriestOptions.push({
+                value: $(this).val(),
+                text: $(this).text()
+            });
+        });
+
         // Initialize DataTable
         $('#bookingsTable').DataTable({
             pageLength: 10,
@@ -585,7 +597,30 @@
             const data = $(this).data();
             $('#assign_pooja').val(data.poojaName);
             $('#assign_current').val(data.currentPriest);
-            $('#assign_new_priest').val(data.priestId);
+            
+            const bookingDate = data.date;
+            const selectEl = $('#assign_new_priest');
+            selectEl.empty();
+            
+            allPriestOptions.forEach(opt => {
+                if (opt.value === '') {
+                    selectEl.append($('<option>', { value: '', text: opt.text }));
+                    return;
+                }
+                
+                // Check if this priest is on approved leave on the booking date
+                const onLeave = approvedLeaves.some(leave => {
+                    return leave.priest_id == opt.value && 
+                           leave.start_date <= bookingDate && 
+                           leave.end_date >= bookingDate;
+                });
+                
+                if (!onLeave) {
+                    selectEl.append($('<option>', { value: opt.value, text: opt.text }));
+                }
+            });
+
+            selectEl.val(data.priestId);
             $('#assignForm').attr('action', `/admin/bookings/override-priest/${data.id}`);
         });
 

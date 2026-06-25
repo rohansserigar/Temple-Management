@@ -65,24 +65,89 @@
         <h3 class="fw-bold text-dark mb-0"><i class="bi bi-cash-stack text-warning me-2"></i>Salary & Payouts</h3>
     </div>
 
-    <!-- Sanction Banner -->
-    <div class="salary-card bg-light border-start border-warning border-4">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5 class="fw-bold text-dark"><i class="bi bi-info-circle text-warning me-2"></i>Sanction Salaries for {{ $prevMonthName }}</h5>
-                <p class="text-muted mb-md-0 small">
-                    Clicking the button below will process the payouts for all Priests, Staff, and Accountants for the previous month. 
-                    Wallet positive and negative adjustments will be factored into the final amount, and employee wallet balances will be reset to 0.00.
-                </p>
+    <!-- Top Summary Banner -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="salary-card bg-light border-start border-warning border-4 mb-0">
+                <h5 class="fw-bold text-dark small"><i class="bi bi-info-circle text-warning me-2"></i>Active Payable Month</h5>
+                <p class="text-dark fs-3 fw-bold mb-1">{{ $prevMonthName }}</p>
+                <span class="text-muted small">This cycle covers days 1 to {{ date('t', strtotime($prevMonthVal . '-01')) }} of {{ date('F', strtotime($prevMonthVal . '-01')) }}</span>
             </div>
-            <div class="col-md-4 text-md-end">
-                <form action="{{ route('admin.salaries.sanction') }}" method="POST" onsubmit="return confirm('Are you sure you want to sanction salary payouts for {{ $prevMonthName }}? This will reset all wallets to 0.00.');">
-                    @csrf
-                    <button type="submit" class="btn btn-gold rounded-pill px-4 py-2">
-                        <i class="bi bi-check2-circle me-1"></i> Sanction {{ $prevMonthName }} Salary
-                    </button>
-                </form>
+        </div>
+        <div class="col-md-6">
+            <div class="salary-card bg-light border-start border-success border-4 mb-0">
+                <h5 class="fw-bold text-dark small"><i class="bi bi-currency-rupee text-success me-2"></i>Required Budget for {{ $prevMonthName }}</h5>
+                <p class="text-success fs-3 fw-bold mb-1">₹{{ number_format($totalRequiredPrevMonth, 2) }}</p>
+                <span class="text-muted small">Total estimated payout for all pending employee salaries</span>
             </div>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success border-0 rounded-4 shadow-sm mb-4 p-3 d-flex align-items-center" style="background: #d1fae5; color: #065f46;">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4 p-3 d-flex align-items-center" style="background: #fee2e2; color: #991b1b;">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    <!-- Monthly Sanctioning Section -->
+    <div class="salary-card">
+        <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-calendar-check text-warning me-2"></i>Monthly Salary Sanction Registry</h5>
+        <p class="text-muted small mb-3">
+            Accrued salaries for a given month become payable starting on the 1st of the subsequent month. Factor in any positive/negative wallet balances when processing payouts.
+        </p>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Salary Month</th>
+                        <th>Required/Paid Amount</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($monthsList as $month)
+                    <tr>
+                        <td><strong>{{ $month['name'] }}</strong></td>
+                        <td class="fw-bold text-dark">₹{{ number_format($month['amount'], 2) }}</td>
+                        <td>
+                            @if($month['is_paid'])
+                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Sanctioned & Paid</span>
+                            @elseif($month['can_sanction'])
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-hourglass-split me-1"></i> Pending Payout</span>
+                            @else
+                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill"><i class="bi bi-clock me-1"></i> Accruing / Not Payable Yet</span>
+                            @endif
+                        </td>
+                        <td class="text-end">
+                            @if($month['is_paid'])
+                                <button class="btn btn-secondary rounded-pill px-4 btn-sm" disabled>Already Sanctioned</button>
+                            @elseif($month['can_sanction'])
+                                <form action="{{ route('admin.salaries.sanction') }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to sanction salary payouts for {{ $month['name'] }}? This will reset all wallets to 0.00.');">
+                                    @csrf
+                                    <input type="hidden" name="salary_month" value="{{ $month['val'] }}">
+                                    <button type="submit" class="btn btn-gold rounded-pill px-4 btn-sm text-white">
+                                        <i class="bi bi-check2-circle me-1"></i> Sanction {{ date('M Y', strtotime($month['val'] . '-01')) }} Salary
+                                    </button>
+                                </form>
+                            @else
+                                <button class="btn btn-light border rounded-pill px-4 btn-sm" disabled style="cursor: not-allowed;" title="Available on {{ date('d M Y', strtotime($month['payable_date'])) }}">
+                                    Payable on {{ date('d M Y', strtotime($month['payable_date'])) }}
+                                </button>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 

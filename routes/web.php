@@ -8,10 +8,14 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\TrusteeController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\AccountantController;
+use App\Http\Controllers\EhundiController;
 
 // ============================================
 // PUBLIC ROUTES
 // ============================================
+Route::get('/ehundi', [EhundiController::class, 'show'])->name('ehundi.show');
+Route::post('/ehundi/offer', [EhundiController::class, 'offer'])->name('ehundi.offer');
+
 Route::get('/', function () {
     if (Auth::check()) {
         $role = session('active_role') ?? Auth::user()->role;
@@ -236,23 +240,69 @@ Route::middleware(['auth', 'role.admin'])->group(function () {
     Route::post('/admin/accountant/update/{id}', [AccountantController::class, 'updateAccountant'])->name('admin.accountants.update');
     Route::delete('/admin/accountant/delete/{id}', [AccountantController::class, 'deleteAccountant'])->name('admin.accountants.delete');
 
+    // Event CRUD & Scheduling Routes (Admin management)
+    Route::get('/admin/manage-events', [\App\Http\Controllers\EventController::class, 'manageEvents'])->name('admin.events.index');
+    Route::post('/admin/event/store', [\App\Http\Controllers\EventController::class, 'store'])->name('admin.events.store');
+    Route::post('/admin/event/update/{id}', [\App\Http\Controllers\EventController::class, 'update'])->name('admin.events.update');
+    Route::delete('/admin/event/delete/{id}', [\App\Http\Controllers\EventController::class, 'destroy'])->name('admin.events.delete');
+
+    // Inventory CRUD & Stock Adjustment Routes (Admin management)
+    Route::get('/admin/manage-inventory', [\App\Http\Controllers\InventoryController::class, 'index'])->name('admin.inventory.index');
+    Route::post('/admin/inventory/store', [\App\Http\Controllers\InventoryController::class, 'store'])->name('admin.inventory.store');
+    Route::post('/admin/inventory/update/{id}', [\App\Http\Controllers\InventoryController::class, 'update'])->name('admin.inventory.update');
+    Route::post('/admin/inventory/adjust/{id}', [\App\Http\Controllers\InventoryController::class, 'adjustStock'])->name('admin.inventory.adjust');
+    Route::delete('/admin/inventory/delete/{id}', [\App\Http\Controllers\InventoryController::class, 'destroy'])->name('admin.inventory.delete');
+
+    // Donation Management Routes (Admin management)
+    Route::get('/admin/manage-donations', [\App\Http\Controllers\DonationController::class, 'manageDonations'])->name('admin.donations.index');
+    Route::post('/admin/donation/store-devotee', [\App\Http\Controllers\DonationController::class, 'storeDevoteeDonation'])->name('admin.donations.storeDevotee');
+    Route::post('/admin/donation/store-guest', [\App\Http\Controllers\DonationController::class, 'storeGuestDonation'])->name('admin.donations.storeGuest');
+
     // Admin Settings Routes
     Route::get('/admin/settings', function () {
         $systemMode = \App\Models\Setting::get('system_mode', 'Testing Mode');
         $emailHandling = \App\Models\Setting::get('testing_email_handling', 'Do Not Send Emails');
-        return view('admin.settings', compact('systemMode', 'emailHandling'));
+        $templeName = \App\Models\Setting::get('temple_name', 'Golden Temple');
+        $templeOpeningTime = \App\Models\Setting::get('temple_opening_time', '06:00');
+        $templeClosingTime = \App\Models\Setting::get('temple_closing_time', '21:00');
+        $lowStockThreshold = \App\Models\Setting::get('low_stock_threshold', '10.00');
+        $maxAdvanceBookingDays = \App\Models\Setting::get('max_advance_booking_days', '90');
+        $onlinePoojaShippingCharge = \App\Models\Setting::get('online_pooja_shipping_charge', '50.00');
+
+        return view('admin.settings', compact(
+            'systemMode', 
+            'emailHandling',
+            'templeName',
+            'templeOpeningTime',
+            'templeClosingTime',
+            'lowStockThreshold',
+            'maxAdvanceBookingDays',
+            'onlinePoojaShippingCharge'
+        ));
     })->name('admin.settings');
 
     Route::post('/admin/settings', function (\Illuminate\Http\Request $request) {
-        $request->validate([
+        $validated = $request->validate([
             'system_mode' => 'required|in:Testing Mode,Live Mode',
             'testing_email_handling' => 'required_if:system_mode,Testing Mode|nullable|in:Send Emails,Do Not Send Emails',
+            'temple_name' => 'required|string|max:255',
+            'temple_opening_time' => 'required|string|max:10',
+            'temple_closing_time' => 'required|string|max:10',
+            'low_stock_threshold' => 'required|numeric|min:0',
+            'max_advance_booking_days' => 'required|integer|min:1',
+            'online_pooja_shipping_charge' => 'required|numeric|min:0',
         ]);
 
         \App\Models\Setting::set('system_mode', $request->system_mode);
         if ($request->has('testing_email_handling')) {
             \App\Models\Setting::set('testing_email_handling', $request->testing_email_handling);
         }
+        \App\Models\Setting::set('temple_name', $request->temple_name);
+        \App\Models\Setting::set('temple_opening_time', $request->temple_opening_time);
+        \App\Models\Setting::set('temple_closing_time', $request->temple_closing_time);
+        \App\Models\Setting::set('low_stock_threshold', $request->low_stock_threshold);
+        \App\Models\Setting::set('max_advance_booking_days', $request->max_advance_booking_days);
+        \App\Models\Setting::set('online_pooja_shipping_charge', $request->online_pooja_shipping_charge);
 
         return redirect()->back()->with('success', 'System settings updated successfully.');
     })->name('admin.settings.update');

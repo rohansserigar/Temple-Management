@@ -27,6 +27,10 @@
     </span>
     @endif
 
+    <a href="{{ route('ehundi.show') }}" class="btn btn-warning rounded-pill text-white fw-bold px-3 py-2 d-inline-flex align-items-center gap-1" style="background: linear-gradient(135deg, #b8863a, #d4a05a); border: none; font-size: 0.85rem; box-shadow: 0 4px 10px rgba(184, 134, 58, 0.2);">
+      🪔 e-Hundi
+    </a>
+
     <div class="dropdown">
       <button class="profile-toggle dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle"></i>

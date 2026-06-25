@@ -42,14 +42,47 @@
         padding: 14px 20px;
         vertical-align: middle;
     }
+    .badge-status-upcoming { background: #e0f2fe; color: #0369a1; }
+    .badge-status-ongoing { background: #fef3c7; color: #b45309; }
+    .badge-status-completed { background: #d1fae5; color: #047857; }
+    .badge-status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    @media print {
+        .sidebar, .topbar, .nav-tabs, .btn-print-report {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+        .container-fluid {
+            padding: 0 !important;
+        }
+        .tab-content > .tab-pane {
+            display: block !important;
+            opacity: 1 !important;
+            page-break-after: always;
+            margin-bottom: 40px;
+        }
+        .report-card {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+    }
 </style>
+
 @endsection
 
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-bar-graph text-warning me-2"></i>System Reports</h3>
+        <button onclick="window.print()" class="btn btn-outline-warning rounded-pill px-4 fw-semibold btn-print-report" style="border-color: #b8863a; color: #b8863a;">
+            <i class="bi bi-printer me-2"></i>Print / Export PDF
+        </button>
     </div>
+
 
     <!-- Tabs Content -->
     <div class="report-card p-0">
@@ -69,6 +102,12 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#earnings-pane" type="button" role="tab"><i class="bi bi-currency-rupee text-warning me-1"></i>Monthly Earnings</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-pane" type="button" role="tab"><i class="bi bi-stars text-warning me-1"></i>Events Report</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory-pane" type="button" role="tab"><i class="bi bi-box-seam text-warning me-1"></i>Inventory & Stock</button>
                 </li>
             </ul>
         </div>
@@ -303,6 +342,153 @@
                                     @empty
                                     <tr>
                                         <td colspan="2" class="text-center py-3 text-muted">No donations earnings reported.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Report Pane -->
+            <div class="tab-pane fade" id="events-pane" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <h5 class="fw-bold mb-3 text-dark">Events Breakdown by Status</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Total Events Scheduled</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($eventsCountSummary as $summary)
+                                    <tr>
+                                        <td>
+                                            <span class="badge px-3 py-2 rounded-pill fw-semibold badge-status-{{ strtolower($summary->status) }}">
+                                                {{ $summary->status }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold fs-5 text-dark">{{ $summary->count }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="2" class="text-center py-3 text-muted">No events data.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h5 class="fw-bold mb-3 text-dark">Recent Scheduled Events (Last 20)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Event Name</th>
+                                        <th>Date & Time</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recentEventsList as $e)
+                                    <tr>
+                                        <td><strong>{{ $e->event_name }}</strong></td>
+                                        <td>
+                                            <div class="fw-semibold">{{ date('d M Y', strtotime($e->event_date)) }}</div>
+                                            <div class="small text-muted">{{ date('g:i A', strtotime($e->start_time)) }} - {{ date('g:i A', strtotime($e->end_time)) }}</div>
+                                        </td>
+                                        <td>{{ $e->location }}</td>
+                                        <td>
+                                            <span class="badge px-3 py-2 rounded-pill fw-semibold badge-status-{{ strtolower($e->status) }}">
+                                                {{ $e->status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-3 text-muted">No recent events logged.</td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory & Stock Pane -->
+            <div class="tab-pane fade" id="inventory-pane" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-md-5">
+                        <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i>Low Stock Warnings</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Qty in Hand</th>
+                                        <th>Min Threshold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($inventoryLowStockList as $i)
+                                    <tr class="table-warning">
+                                        <td><strong>{{ $i->item_name }}</strong></td>
+                                        <td class="text-danger fw-bold">{{ number_format($i->quantity, 2) }} {{ $i->unit }}</td>
+                                        <td class="text-muted">{{ number_format($i->minimum_threshold, 2) }} {{ $i->unit }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center py-3 text-success fw-semibold">
+                                            <i class="bi bi-check-circle me-1"></i> All stock levels are above warning thresholds.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <h5 class="fw-bold mb-3 text-dark">Recent Stock Ledger Activity (Last 30 Transactions)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Item</th>
+                                        <th>Action</th>
+                                        <th>Qty</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($inventoryTransactionsList as $tx)
+                                    <tr>
+                                        <td>{{ date('d M H:i', strtotime($tx->created_at)) }}</td>
+                                        <td><strong>{{ $tx->item_name }}</strong></td>
+                                        <td>
+                                            @if($tx->transaction_type === 'Restock')
+                                            <span class="badge bg-success rounded-pill px-2 py-1">Restock</span>
+                                            @elseif($tx->transaction_type === 'Consume')
+                                            <span class="badge bg-danger rounded-pill px-2 py-1">Consume</span>
+                                            @else
+                                            <span class="badge bg-secondary rounded-pill px-2 py-1">Adjust</span>
+                                            @endif
+                                        </td>
+                                        <td class="fw-bold text-{{ $tx->transaction_type === 'Restock' ? 'success' : 'danger' }}">
+                                            {{ $tx->transaction_type === 'Restock' ? '+' : '-' }}{{ number_format($tx->quantity, 2) }}
+                                        </td>
+                                        <td class="small text-muted">{{ $tx->remarks }}</td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-3 text-muted">No stock movements recorded.</td>
                                     </tr>
                                     @endforelse
                                 </tbody>

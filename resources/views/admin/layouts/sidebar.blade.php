@@ -39,13 +39,13 @@
       </a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-wallet2"></i> Donations</a>
+      <a href="{{ route('admin.donations.index') }}" class="nav-link {{ request()->routeIs('admin.donations.*') ? 'active' : '' }}"><i class="bi bi-wallet2"></i> Donations</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-stars"></i> Events</a>
+      <a href="{{ route('admin.events.index') }}" class="nav-link {{ request()->routeIs('admin.events.*') ? 'active' : '' }}"><i class="bi bi-stars"></i> Events</a>
     </li>
     <li class="nav-item">
-      <a href="#" class="nav-link"><i class="bi bi-box-seam"></i> Inventory</a>
+      <a href="{{ route('admin.inventory.index') }}" class="nav-link {{ request()->routeIs('admin.inventory.*') ? 'active' : '' }}"><i class="bi bi-box-seam"></i> Inventory</a>
     </li>
     <li class="nav-item">
       <a href="{{ route('admin.salaries.index') }}" class="nav-link {{ request()->routeIs('admin.salaries.*') ? 'active' : '' }}"><i class="bi bi-cash-stack"></i> Salaries</a>

@@ -156,6 +156,49 @@
                 </div>
             </div>
 
+            <!-- Temple Operations Section -->
+            <div class="settings-section">
+                <h5><i class="bi bi-bank2 me-2"></i>Temple Operations</h5>
+                <p class="text-muted small mb-3">Configure general temple settings, identification details, and public operating hours.</p>
+                <div class="row g-3">
+                    <div class="col-md-12 mb-2">
+                        <label class="form-label fw-semibold text-dark">Temple Display Name</label>
+                        <input type="text" name="temple_name" class="form-control rounded-3" value="{{ $templeName }}" placeholder="e.g. Golden Temple" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-dark">Daily Opening Time</label>
+                        <input type="time" name="temple_opening_time" class="form-control rounded-3" value="{{ $templeOpeningTime }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-dark">Daily Closing Time</label>
+                        <input type="time" name="temple_closing_time" class="form-control rounded-3" value="{{ $templeClosingTime }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory & Booking Configuration -->
+            <div class="settings-section">
+                <h5><i class="bi bi-sliders me-2"></i>Inventory & Booking Rules</h5>
+                <p class="text-muted small mb-3">Define standard defaults for stock thresholds, online bookings limits, and delivery surcharges.</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-dark">Default Low Stock Threshold</label>
+                        <input type="number" step="0.01" name="low_stock_threshold" class="form-control rounded-3" value="{{ $lowStockThreshold }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold text-dark">Max Advance Booking Limit (Days)</label>
+                        <input type="number" name="max_advance_booking_days" class="form-control rounded-3" value="{{ $maxAdvanceBookingDays }}" required>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold text-dark">Prasad Delivery Shipping Charge (₹)</label>
+                        <div class="input-group">
+                            <span class="input-group-text rounded-start-3 bg-light">₹</span>
+                            <input type="number" step="0.01" name="online_pooja_shipping_charge" class="form-control rounded-end-3" value="{{ $onlinePoojaShippingCharge }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="text-end">
                 <button type="submit" class="btn btn-submit">Save Settings</button>
             </div>

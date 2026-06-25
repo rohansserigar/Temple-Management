@@ -66,6 +66,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a href="{{ route('ehundi.show') }}" class="nav-link {{ request()->routeIs('ehundi.show') ? 'active' : '' }}">
+        <i class="bi bi-coin"></i> e-Hundi
+      </a>
+    </li>
+    <li class="nav-item">
       <a href="{{ route('devotee.dashboard') }}?tab=membership" class="nav-link {{ request()->get('tab') === 'membership' ? 'active' : '' }}">
         <i class="bi bi-gem"></i> Membership
       </a>
