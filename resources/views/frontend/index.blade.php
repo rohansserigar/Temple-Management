@@ -239,38 +239,122 @@
       background: rgba(255, 111, 0, 0.05);
     }
 
-    @keyframes pulseEhundi {
-      0% {
-        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
-        transform: translateY(0);
-      }
-      50% {
-        box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
-        transform: translateY(-2px);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
-        transform: translateY(0);
-      }
+    /* Wrapper to contain the absolute positioned falling coins */
+    .ehundi-wrapper {
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
     }
-    
+
+    /* The e-Hundi Button */
     .navbar-custom .nav-link-ehundi {
-      border: 1.5px solid #d4af37 !important;
-      background: rgba(212, 175, 55, 0.08) !important;
-      color: #b8863a !important;
-      font-weight: 700 !important;
-      animation: pulseEhundi 2.5s infinite;
+      position: relative;
+      display: inline-flex !important;
+      align-items: center;
+      gap: 6px;
       padding: 0.5rem 1.4rem !important;
       border-radius: 30px !important;
-      box-shadow: 0 4px 10px rgba(212, 175, 55, 0.1);
+      font-weight: 700 !important;
+      color: #ffffff !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      background: transparent !important;
+      border: none !important;
+      overflow: hidden;
+      z-index: 1;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
+    /* Glowing running lights border via rotating conic gradient */
+    .navbar-custom .nav-link-ehundi::before {
+      content: '';
+      position: absolute;
+      top: -150%;
+      left: -150%;
+      width: 400%;
+      height: 400%;
+      background: conic-gradient(
+        from 0deg,
+        #ffd700 0deg,
+        #ff9f00 60deg,
+        #ff3c00 120deg,
+        #ffd700 180deg,
+        #ff9f00 240deg,
+        #ff3c00 300deg,
+        #ffd700 360deg
+      );
+      animation: rotateLight 1s linear infinite;
+      z-index: -2;
+    }
+
+    /* Inner background to mask the gradient and leave a thin border */
+    .navbar-custom .nav-link-ehundi::after {
+      content: '';
+      position: absolute;
+      inset: 2.5px;
+      background: linear-gradient(135deg, #ffd700 0%, #b8863a 100%);
+      border-radius: 28px;
+      z-index: -1;
+      transition: all 0.3s ease;
+    }
+
     .navbar-custom .nav-link-ehundi:hover {
-      background: linear-gradient(135deg, #d4af37 0%, #ff6f00 100%) !important;
-      color: #fff !important;
-      box-shadow: 0 6px 20px rgba(255, 111, 0, 0.3) !important;
-      animation: none;
-      transform: translateY(-2px) scale(1.02);
+      transform: scale(1.05) translateY(-1px);
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
+    }
+
+    .navbar-custom .nav-link-ehundi:hover::after {
+      background: linear-gradient(135deg, #ffe55e 0%, #d4af37 100%);
+    }
+
+    @keyframes rotateLight {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Coins falling container */
+    .ehundi-coins-container {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      height: 300px;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 9999;
+    }
+
+    /* Individual falling coin */
+    .ehundi-coin {
+      position: absolute;
+      pointer-events: none;
+      font-family: Arial, sans-serif;
+      user-select: none;
+      z-index: 1000;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+      opacity: 0;
+    }
+
+    @keyframes paisaFall {
+      0% {
+        transform: translateY(0) rotate(var(--rotate-start)) scale(0.5);
+        opacity: 0;
+      }
+      15% {
+        opacity: 1;
+        transform: translateY(10px) rotate(calc(var(--rotate-start) + 30deg)) scale(1.1);
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(180px) rotate(var(--rotate-end)) scale(0.7);
+        opacity: 0;
+      }
     }
 
     @media (max-width: 991.98px) {
@@ -1058,9 +1142,11 @@
           <li class="nav-item"><a class="nav-link" href="#poojas">Book Pooja</a></li>
           <li class="nav-item"><a class="nav-link" href="#donations">Donations</a></li>
           <li class="nav-item ms-lg-2">
-            <a class="nav-link nav-link-ehundi" href="{{ route('ehundi.show') }}">
-              🪔 e-Hundi
-            </a>
+            <div class="ehundi-wrapper">
+              <a class="nav-link nav-link-ehundi" href="{{ route('ehundi.show') }}">
+                🪔 e-Hundi
+              </a>
+            </div>
           </li>
 
           <!-- Login or Dashboard Authentication -->
@@ -1933,6 +2019,82 @@
         onUpdate: function() {
           counterElement.innerHTML = "₹" + Math.floor(countObj.value).toLocaleString('en-IN');
         }
+      });
+
+      // e-Hundi falling coins animation
+      const ehundiBtns = document.querySelectorAll('.nav-link-ehundi');
+      ehundiBtns.forEach(btn => {
+        const wrapper = btn.closest('.ehundi-wrapper');
+        if (!wrapper) return;
+        
+        // Create a container for falling coins
+        const coinsContainer = document.createElement('div');
+        coinsContainer.className = 'ehundi-coins-container';
+        wrapper.appendChild(coinsContainer);
+
+        let activeInterval = null;
+
+        function spawnCoin() {
+          const coin = document.createElement('div');
+          coin.className = 'ehundi-coin';
+          
+          // Randomly select coin emoji
+          const coinsArray = ['🪙', '🪙', '🪙', '🪙', '🪙'];
+          coin.innerHTML = coinsArray[Math.floor(Math.random() * coinsArray.length)];
+          
+          // Random horizontal position within the button
+          const leftPos = Math.random() * btn.offsetWidth;
+          coin.style.left = leftPos + 'px';
+          coin.style.top = '0px';
+          
+          // Random size
+          const size = 14 + Math.random() * 12; // 14px to 26px
+          coin.style.fontSize = size + 'px';
+          
+          // Random rotation
+          const rotateStart = Math.random() * 360;
+          const rotateEnd = rotateStart + 360 + Math.random() * 720;
+          coin.style.setProperty('--rotate-start', rotateStart + 'deg');
+          coin.style.setProperty('--rotate-end', rotateEnd + 'deg');
+          
+          // Random duration
+          const duration = 1.5 + Math.random() * 1.0; // 1.5s to 2.5s (softer animation for steady fall)
+          coin.style.animation = `paisaFall ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
+
+          coinsContainer.appendChild(coin);
+
+          // Remove coin after animation ends
+          setTimeout(() => {
+            coin.remove();
+          }, duration * 1000);
+        }
+
+        // Start constant/steady falling coins (gentle flow)
+        function startSteadyCoins() {
+          if (activeInterval) clearInterval(activeInterval);
+          activeInterval = setInterval(spawnCoin, 900); // One coin every 900ms
+        }
+
+        // Fast fall on hover (rapid stream)
+        function startFastCoins() {
+          if (activeInterval) clearInterval(activeInterval);
+          // Spawn immediate burst
+          for (let i = 0; i < 5; i++) {
+            setTimeout(spawnCoin, i * 100);
+          }
+          activeInterval = setInterval(spawnCoin, 200); // One coin every 200ms
+        }
+
+        // Initialize steady falling coins right away
+        startSteadyCoins();
+
+        btn.addEventListener('mouseenter', () => {
+          startFastCoins();
+        });
+
+        btn.addEventListener('mouseleave', () => {
+          startSteadyCoins();
+        });
       });
     });
   </script>

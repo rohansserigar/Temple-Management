@@ -17,25 +17,6 @@ Route::get('/ehundi', [EhundiController::class, 'show'])->name('ehundi.show');
 Route::post('/ehundi/offer', [EhundiController::class, 'offer'])->name('ehundi.offer');
 
 Route::get('/', function () {
-    if (Auth::check()) {
-        $role = session('active_role') ?? Auth::user()->role;
-        switch ($role) {
-            case 'Admin':
-                return redirect()->route('admin.dashboard');
-            case 'Priest':
-                return redirect()->route('priest.dashboard');
-            case 'Trustee':
-                return redirect()->route('trustee.dashboard');
-            case 'Staff':
-                return redirect()->route('staff.dashboard');
-            case 'Accountant':
-                return redirect()->route('accountant.dashboard');
-            case 'Devotee':
-            default:
-                return redirect()->route('devotee.dashboard');
-        }
-    }
-
     $poojas = \Illuminate\Support\Facades\DB::table('poojas')->where('status', 'Active')->get();
     $events = \Illuminate\Support\Facades\DB::table('events')->where('status', 'Upcoming')->orderBy('event_date', 'asc')->get();
     
