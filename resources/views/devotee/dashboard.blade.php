@@ -133,6 +133,8 @@
   .badge-status.pending { background: #fef3c7; color: #92400e; }
   .badge-status.completed { background: #dbeafe; color: #1e40af; }
   .badge-status.cancelled { background: #fee2e2; color: #991b1b; }
+  .badge-status.assigned { background: #e0f2fe; color: #0369a1; }
+  .badge-status.in-progress { background: #f3e8ff; color: #6b21a8; }
 
   .table-wrap {
     overflow: hidden;
@@ -519,8 +521,8 @@
             </div>
             <p class="mb-1 text-muted small">
               Pooja <strong>{{ $log->pooja_name }}</strong> (Booking ID #{{ $log->booking_id }}) status transitioned from 
-              <span class="badge bg-secondary bg-opacity-20 text-dark">{{ $log->status_from ?? 'Pending' }}</span> to 
-              <span class="badge bg-warning bg-opacity-20 text-warning">{{ $log->status_to }}</span>.
+              <span class="badge-status {{ strtolower(str_replace(' ', '-', $log->status_from ?? 'Pending')) }}">{{ $log->status_from ?? 'Pending' }}</span> to 
+              <span class="badge-status {{ strtolower(str_replace(' ', '-', $log->status_to)) }}">{{ $log->status_to }}</span>.
             </p>
             @if($log->remarks)
               <small class="text-warning"><i class="bi bi-chat-left-text me-1"></i> Remarks: {{ $log->remarks }}</small>
@@ -757,7 +759,7 @@
                                 <span class="fw-semibold text-dark">{{ $log->pooja_name }} status</span>
                                 <span class="text-muted" style="font-size:0.75rem;">{{ date('d M', strtotime($log->created_at)) }}</span>
                             </div>
-                            <div class="text-muted mt-1">Changed to <span class="badge bg-warning bg-opacity-20 text-dark">{{ $log->status_to }}</span></div>
+                             <div class="text-muted mt-1">Changed to <span class="badge-status {{ strtolower(str_replace(' ', '-', $log->status_to)) }}">{{ $log->status_to }}</span></div>
                         </div>
                     @empty
                         <div class="text-muted py-3 text-center">No recent activities.</div>

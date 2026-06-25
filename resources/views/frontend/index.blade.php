@@ -18,22 +18,28 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
-  <style>
+    <style>
     :root {
       --primary-saffron: #ff6f00;
       --saffron-dark: #e65100;
+      --saffron-glow: rgba(255, 111, 0, 0.08);
       --primary-gold: #b8863a;
-      --gold-light: #e8d0a7;
-      --gold-dark: #9c6c28;
-      --dark-bg: #17110a;
+      --gold-glow: rgba(184, 134, 58, 0.12);
+      --gold-light: #f3c675;
+      --gold-dark: #997322;
+      --dark-bg: #1e150d;
+      --dark-card: rgba(30, 21, 13, 0.75);
       --light-bg: #fdfbf7;
-      --white-glass: rgba(255, 255, 255, 0.75);
-      --border-glass: rgba(184, 134, 58, 0.15);
+      --text-dark: #2b221a;
+      --text-light: #fdfaf6;
+      --border-gold: rgba(184, 134, 58, 0.18);
+      --border-gold-hover: rgba(184, 134, 58, 0.45);
       
       --gold-gradient: linear-gradient(135deg, #c9933b 0%, #b8863a 50%, #9c6c28 100%);
       --saffron-gradient: linear-gradient(135deg, #ff9e00 0%, #ff6f00 50%, #e65100 100%);
       --dark-gradient: linear-gradient(135deg, #2b1f13 0%, #17110a 100%);
-      --glass-gradient: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,248,240,0.5) 100%);
+      --glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 248, 240, 0.65) 100%);
+      --light-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(253, 250, 245, 0.8) 100%);
     }
 
     * {
@@ -45,7 +51,7 @@
 
     body {
       background: var(--light-bg);
-      color: #2b2520;
+      color: var(--text-dark);
       overflow-x: hidden;
     }
 
@@ -62,7 +68,7 @@
       width: 100%;
       height: 100%;
       background-image: radial-gradient(rgba(184, 134, 58, 0.04) 1px, transparent 0);
-      background-size: 24px 24px;
+      background-size: 32px 32px;
       pointer-events: none;
       z-index: 0;
     }
@@ -72,9 +78,47 @@
       width: 600px;
       height: 600px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 111, 0, 0.05) 0%, rgba(184, 134, 58, 0.02) 50%, rgba(255,255,255,0) 100%);
+      background: radial-gradient(circle, rgba(255, 111, 0, 0.04) 0%, rgba(184, 134, 58, 0.02) 50%, rgba(255,255,255,0) 100%);
       pointer-events: none;
       z-index: 0;
+      filter: blur(40px);
+    }
+
+    /* ----- rotating mandala ----- */
+    .mandala-container {
+      position: absolute;
+      top: -15%;
+      right: -10%;
+      width: 650px;
+      height: 650px;
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+      animation: spinMandala 140s linear infinite;
+      transform-origin: center center;
+    }
+
+    .mandala-container-left {
+      position: absolute;
+      bottom: -10%;
+      left: -15%;
+      width: 550px;
+      height: 550px;
+      opacity: 0.1;
+      pointer-events: none;
+      z-index: 0;
+      animation: spinMandalaCounter 120s linear infinite;
+      transform-origin: center center;
+    }
+
+    @keyframes spinMandala {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes spinMandalaCounter {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
     }
 
     /* ----- scrollbar styling ----- */
@@ -87,6 +131,7 @@
     ::-webkit-scrollbar-thumb {
       background: var(--primary-gold);
       border-radius: 10px;
+      border: 2px solid var(--light-bg);
     }
     ::-webkit-scrollbar-thumb:hover {
       background: var(--primary-saffron);
@@ -94,71 +139,117 @@
 
     /* ----- navigation bar ----- */
     .navbar-custom {
-      background: rgba(253, 251, 247, 0.8);
+      background: rgba(253, 251, 247, 0.85);
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid var(--border-glass);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
-      transition: all 0.4s ease;
+      border: 1px solid rgba(184, 134, 58, 0.18);
+      border-radius: 40px;
+      margin-top: 15px;
+      padding: 0.6rem 1.5rem;
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      box-shadow: 0 10px 30px rgba(184, 134, 58, 0.06);
+      z-index: 1000;
+    }
+
+    @media (min-width: 992px) {
+      .navbar-custom {
+        width: calc(100% - 60px);
+        left: 30px !important;
+        right: 30px !important;
+      }
     }
 
     .navbar-custom.scrolled {
-      padding: 0.8rem 0;
-      background: rgba(253, 251, 247, 0.95);
+      margin-top: 0;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      border-top: 0;
+      width: 100% !important;
+      left: 0 !important;
+      right: 0 !important;
+      background: rgba(253, 251, 247, 0.96);
       border-bottom: 1px solid rgba(184, 134, 58, 0.25);
+      padding: 0.5rem 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     }
 
     .navbar-custom .navbar-brand {
       font-weight: 900;
-      font-size: 1.6rem;
-      letter-spacing: 0.5px;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
       color: #2b1f13;
+      text-shadow: 0 0 10px rgba(184, 134, 58, 0.1);
     }
 
     .navbar-custom .navbar-brand i {
       color: var(--primary-saffron);
-      text-shadow: 0 2px 10px rgba(255, 111, 0, 0.2);
+      filter: drop-shadow(0 0 5px rgba(255, 111, 0, 0.3));
     }
 
     .navbar-custom .nav-link {
       color: #4a3e35;
       font-weight: 500;
-      padding: 0.5rem 1.1rem;
+      padding: 0.5rem 1.2rem;
       border-radius: 30px;
-      margin: 0 0.1rem;
       transition: all 0.3s ease;
-      font-size: 0.95rem;
+      font-size: 0.92rem;
+      position: relative;
+    }
+
+    .navbar-custom .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--gold-gradient);
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
+    }
+
+    .navbar-custom .nav-link:hover::after,
+    .navbar-custom .nav-link.active::after {
+      width: 60%;
     }
 
     .navbar-custom .nav-link:hover, 
     .navbar-custom .nav-link.active {
       color: var(--primary-saffron);
-      background: rgba(255, 111, 0, 0.06);
+      background: rgba(255, 111, 0, 0.05);
     }
 
     @keyframes pulseEhundi {
       0% {
-        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5);
+        transform: scale(1);
       }
-      70% {
+      50% {
         box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+        transform: scale(1.02);
       }
       100% {
         box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+        transform: scale(1);
       }
     }
+    
     .navbar-custom .nav-link-ehundi {
       border: 1.5px solid #d4af37 !important;
-      background: rgba(212, 175, 55, 0.1) !important;
+      background: rgba(212, 175, 55, 0.12) !important;
       color: #b8863a !important;
       font-weight: 700 !important;
       animation: pulseEhundi 2.5s infinite;
-      padding: 0.5rem 1.2rem !important;
+      padding: 0.5rem 1.3rem !important;
     }
+    
     .navbar-custom .nav-link-ehundi:hover {
-      background: #d4af37 !important;
-      color: white !important;
-      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3) !important;
+      background: var(--gold-gradient) !important;
+      color: #fff !important;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3) !important;
+      animation: none;
+      transform: translateY(-1px);
     }
 
     /* ----- buttons ----- */
@@ -166,7 +257,7 @@
       background: var(--gold-gradient);
       border: 1px solid var(--gold-dark);
       color: #fff !important;
-      font-weight: 600;
+      font-weight: 700;
       padding: 0.7rem 1.8rem;
       border-radius: 30px;
       transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -174,16 +265,16 @@
     }
 
     .btn-gold:hover {
-      background: var(--gold-dark);
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(184, 134, 58, 0.4);
+      box-shadow: 0 8px 25px rgba(184, 134, 58, 0.45);
+      filter: brightness(1.05);
     }
 
     .btn-saffron {
       background: var(--saffron-gradient);
       border: 1px solid var(--saffron-dark);
       color: #fff !important;
-      font-weight: 600;
+      font-weight: 700;
       padding: 0.7rem 1.8rem;
       border-radius: 30px;
       transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -191,9 +282,9 @@
     }
 
     .btn-saffron:hover {
-      background: var(--saffron-dark);
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(255, 111, 0, 0.4);
+      filter: brightness(1.08);
     }
 
     .btn-outline-gold {
@@ -233,13 +324,16 @@
 
     /* ----- hero section ----- */
     .hero-section {
-      padding: 9rem 0 6rem 0;
+      padding: 10.5rem 0 7rem 0;
       position: relative;
       background: radial-gradient(circle at 80% 20%, rgba(255, 243, 224, 0.7) 0%, rgba(253, 251, 247, 1) 100%);
+      color: var(--text-dark);
+      overflow: hidden;
+      border-bottom: 1.5px solid var(--border-gold);
     }
 
     .hero-title {
-      font-size: 3.8rem;
+      font-size: 4rem;
       line-height: 1.15;
       color: #2b1f13;
       margin-bottom: 1.5rem;
@@ -258,13 +352,13 @@
       left: 0;
       bottom: 5px;
       width: 100%;
-      height: 6px;
+      height: 4px;
       background: rgba(255, 111, 0, 0.12);
-      border-radius: 3px;
+      border-radius: 2px;
     }
 
     .hero-desc {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       color: #615246;
       line-height: 1.7;
       margin-bottom: 2.2rem;
@@ -277,16 +371,20 @@
 
     .hero-image-container {
       position: relative;
-      border-radius: 50% 50% 40px 40px;
+      border-radius: 50% 50% 30px 30px;
       overflow: hidden;
-      border: 8px solid #fff;
-      box-shadow: 0 30px 60px rgba(184, 134, 58, 0.25);
+      border: 4px solid var(--primary-gold);
+      padding: 6px;
+      background: #fff;
+      box-shadow: 0 30px 60px rgba(184, 134, 58, 0.22);
+      outline: 1.5px solid rgba(184, 134, 58, 0.25);
+      outline-offset: 6px;
       animation: floatHeroImage 6s ease-in-out infinite alternate;
     }
 
     @keyframes floatHeroImage {
       0% { transform: translateY(0px) rotate(0deg); }
-      100% { transform: translateY(-15px) rotate(1deg); }
+      100% { transform: translateY(-15px) rotate(0.5deg); }
     }
 
     .hero-decor-badge {
@@ -294,7 +392,7 @@
       background: #fff;
       border-radius: 20px;
       padding: 0.8rem 1.5rem;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+      box-shadow: 0 15px 35px rgba(184, 134, 58, 0.08);
       display: flex;
       align-items: center;
       gap: 12px;
@@ -304,13 +402,13 @@
 
     .badge-top-left {
       top: 15%;
-      left: -10%;
+      left: -8%;
       animation: floatBadge 4s ease-in-out infinite alternate;
     }
 
     .badge-bottom-right {
       bottom: 12%;
-      right: -5%;
+      right: -4%;
       animation: floatBadge 5s ease-in-out infinite alternate 1s;
     }
 
@@ -333,21 +431,22 @@
 
     /* ----- global section title ----- */
     .section-header {
-      margin-bottom: 4rem;
+      margin-bottom: 4.5rem;
       position: relative;
     }
 
     .section-subtitle {
       color: var(--primary-saffron);
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       text-transform: uppercase;
       margin-bottom: 0.8rem;
+      display: inline-block;
     }
 
     .section-title {
-      font-size: 2.8rem;
+      font-size: 3rem;
       color: #2b1f13;
       position: relative;
       display: inline-block;
@@ -356,28 +455,29 @@
     .section-title::after {
       content: '🪔';
       position: absolute;
-      bottom: -32px;
+      bottom: -36px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 1.5rem;
+      font-size: 1.6rem;
+      filter: drop-shadow(0 2px 6px rgba(184, 134, 58, 0.2));
     }
 
     .section-title::before {
       content: '';
       position: absolute;
-      bottom: -20px;
+      bottom: -22px;
       left: 10%;
       width: 80%;
       height: 2px;
-      background: radial-gradient(circle, var(--primary-gold) 0%, rgba(255,255,255,0) 100%);
+      background: radial-gradient(circle, var(--primary-gold) 0%, rgba(184, 134, 58, 0) 100%);
     }
 
     /* ----- pooja grid cards ----- */
     .pooja-card {
-      background: var(--glass-gradient);
-      border: 1px solid var(--border-glass);
+      background: var(--light-glass-gradient);
+      border: 1px solid var(--border-gold);
       border-radius: 24px;
-      padding: 2rem;
+      padding: 2.2rem;
       transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
       position: relative;
       overflow: hidden;
@@ -385,12 +485,13 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(184, 134, 58, 0.02);
     }
 
     .pooja-card:hover {
       transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(184, 134, 58, 0.15);
-      border-color: rgba(184, 134, 58, 0.4);
+      box-shadow: 0 20px 45px rgba(184, 134, 58, 0.15);
+      border-color: var(--primary-gold);
       background: #fff;
     }
 
@@ -412,33 +513,34 @@
 
     .pooja-category {
       display: inline-block;
-      padding: 0.35rem 1rem;
+      padding: 0.4rem 1.1rem;
       background: rgba(184, 134, 58, 0.08);
+      border: 1px solid rgba(184, 134, 58, 0.15);
       color: var(--primary-gold);
-      font-weight: 600;
+      font-weight: 700;
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       border-radius: 50px;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.3rem;
     }
 
     .pooja-title {
-      font-size: 1.6rem;
+      font-size: 1.65rem;
       color: #2b1f13;
       margin-bottom: 0.8rem;
     }
 
     .pooja-desc {
       color: #615246;
-      font-size: 0.95rem;
-      line-height: 1.6;
+      font-size: 0.98rem;
+      line-height: 1.65;
       margin-bottom: 1.5rem;
       flex-grow: 1;
     }
 
     .pooja-meta {
-      border-top: 1px solid rgba(184, 134, 58, 0.08);
+      border-top: 1px solid rgba(184, 134, 58, 0.1);
       padding-top: 1.2rem;
       margin-bottom: 1.5rem;
       display: flex;
@@ -447,14 +549,15 @@
     }
 
     .pooja-fee {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       font-weight: 800;
       color: var(--primary-saffron);
     }
 
     .pooja-duration {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: #8c7d70;
+      font-weight: 600;
     }
 
     .pooja-duration i {
@@ -490,6 +593,7 @@
       width: 4px;
       height: 0%;
       background: var(--gold-gradient);
+      box-shadow: 0 0 8px var(--primary-gold);
       border-radius: 2px;
       z-index: 2;
       transition: height 0.1s linear;
@@ -522,13 +626,13 @@
       height: 50px;
       border-radius: 50%;
       background: #fff;
-      border: 4px solid var(--primary-gold);
+      border: 3.5px solid var(--primary-gold);
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--primary-saffron);
       z-index: 10;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(184, 134, 58, 0.15);
       transition: all 0.3s ease;
     }
 
@@ -541,15 +645,16 @@
       color: #fff;
       border-color: var(--primary-saffron);
       transform: scale(1.15);
+      box-shadow: 0 0 15px rgba(255, 111, 0, 0.4);
     }
 
     .timeline-card {
       background: var(--glass-gradient);
-      border: 1px solid var(--border-glass);
-      border-radius: 20px;
-      padding: 2rem;
+      border: 1px solid var(--border-gold);
+      border-radius: 24px;
+      padding: 2.2rem;
       width: 90%;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+      box-shadow: 0 10px 30px rgba(184, 134, 58, 0.03);
       transition: all 0.4s ease;
     }
 
@@ -560,33 +665,38 @@
     .timeline-card:hover {
       background: #fff;
       border-color: var(--primary-saffron);
-      box-shadow: 0 15px 40px rgba(255, 111, 0, 0.1);
+      box-shadow: 0 15px 40px rgba(255, 111, 0, 0.08);
     }
 
     .event-date-badge {
       background: var(--saffron-gradient);
       color: #fff;
       font-weight: 700;
-      padding: 0.4rem 1rem;
+      padding: 0.45rem 1.2rem;
       border-radius: 50px;
       font-size: 0.85rem;
       display: inline-block;
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
     }
 
     .event-name {
-      font-size: 1.5rem;
+      font-size: 1.60rem;
       color: #2b1f13;
       margin-bottom: 0.8rem;
     }
 
+    .event-desc {
+      color: #615246 !important;
+      line-height: 1.65;
+    }
+
     .event-meta {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: #8c7d70;
-      margin-top: 1rem;
+      margin-top: 1.3rem;
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 18px;
     }
 
     .event-meta span i {
@@ -616,39 +726,40 @@
     /* ----- features section ----- */
     .feature-card {
       background: #fff;
-      border: 1px solid rgba(184, 134, 58, 0.08);
-      border-radius: 24px;
-      padding: 2.5rem 2rem;
+      border: 1px solid var(--border-gold);
+      border-radius: 28px;
+      padding: 3rem 2.2rem;
       text-align: center;
       transition: all 0.4s ease;
       height: 100%;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.01);
+      box-shadow: 0 10px 30px rgba(184, 134, 58, 0.02);
     }
 
     .feature-card:hover {
       transform: translateY(-6px);
       border-color: var(--primary-gold);
-      box-shadow: 0 15px 40px rgba(184, 134, 58, 0.1);
+      box-shadow: 0 18px 45px rgba(184, 134, 58, 0.12);
     }
 
     .feature-icon-wrapper {
-      width: 75px;
-      height: 75px;
-      border-radius: 20px;
+      width: 80px;
+      height: 80px;
+      border-radius: 24px;
       background: rgba(184, 134, 58, 0.06);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.8rem auto;
+      margin: 0 auto 2rem auto;
       color: var(--primary-gold);
-      font-size: 2.2rem;
+      font-size: 2.3rem;
       transition: all 0.4s ease;
     }
 
     .feature-card:hover .feature-icon-wrapper {
       background: var(--saffron-gradient);
       color: #fff;
-      transform: rotate(10deg);
+      transform: rotate(8deg);
+      box-shadow: 0 8px 20px rgba(255, 111, 0, 0.25);
     }
 
     /* ----- donations section ----- */
@@ -660,12 +771,12 @@
     .donation-counter-card {
       background: var(--dark-gradient);
       color: #fff;
-      border-radius: 30px;
-      padding: 3rem;
+      border-radius: 32px;
+      padding: 3.5rem;
       position: relative;
       overflow: hidden;
       border: 1px solid rgba(184, 134, 58, 0.3);
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
     }
 
     .donation-counter-card::after {
@@ -673,18 +784,18 @@
       position: absolute;
       top: -30%;
       right: -10%;
-      width: 300px;
-      height: 300px;
+      width: 350px;
+      height: 350px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(255, 111, 0, 0.15) 0%, rgba(184, 134, 58, 0.05) 60%, rgba(255,255,255,0) 100%);
       pointer-events: none;
     }
 
     .counter-value {
-      font-size: 4rem;
+      font-size: 4.2rem;
       font-weight: 800;
       color: var(--gold-light);
-      text-shadow: 0 4px 15px rgba(184, 134, 58, 0.3);
+      text-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
       letter-spacing: -1px;
     }
 
@@ -693,84 +804,95 @@
       padding: 6px;
       border-radius: 50px;
       display: inline-flex;
-      border: 1px solid var(--border-glass);
+      border: 1px solid var(--border-gold);
       margin-bottom: 2.5rem;
     }
 
     .donation-tab-btn {
       border: none;
       background: transparent;
-      padding: 0.6rem 1.8rem;
+      padding: 0.7rem 2.2rem;
       border-radius: 50px;
-      font-weight: 600;
+      font-weight: 700;
       color: #615246;
       transition: all 0.3s ease;
+      font-size: 0.95rem;
     }
 
     .donation-tab-btn.active {
       background: var(--saffron-gradient);
       color: #fff;
-      box-shadow: 0 4px 12px rgba(255, 111, 0, 0.25);
+      box-shadow: 0 5px 15px rgba(255, 111, 0, 0.25);
     }
 
     .donation-form-wrapper {
       background: #fff;
-      border: 1px solid rgba(184, 134, 58, 0.12);
-      border-radius: 30px;
-      padding: 3rem;
-      box-shadow: 0 20px 45px rgba(184, 134, 58, 0.06);
+      border: 1px solid var(--border-gold);
+      border-radius: 32px;
+      padding: 3.5rem;
+      box-shadow: 0 25px 50px rgba(184, 134, 58, 0.06);
     }
 
     .form-floating > .form-control:focus ~ label,
     .form-floating > .form-control:not(:placeholder-shown) ~ label {
       color: var(--primary-saffron);
+      font-weight: 600;
     }
 
-    .form-control:focus {
+    .form-control:focus, .form-select:focus {
       border-color: var(--primary-saffron);
       box-shadow: 0 0 0 0.25rem rgba(255, 111, 0, 0.15);
     }
 
-    .payment-type-toggle {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 1.5rem;
+    .form-control, .form-select {
+      border: 1.5px solid rgba(184, 134, 58, 0.25);
+      border-radius: 12px;
+      height: calc(3.5rem + 4px);
     }
 
-    .payment-toggle-btn {
-      flex: 1;
-      border: 2px solid #ecdac3;
-      background: #fffcf8;
-      border-radius: 16px;
-      padding: 1rem;
-      font-weight: 600;
-      color: #4a3e35;
+    /* Preset donation buttons */
+    .preset-amount-container {
       display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-wrap: wrap;
       gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 18px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      min-width: 75px;
+      background: rgba(184, 134, 58, 0.05);
+      border: 1px solid rgba(184, 134, 58, 0.2);
+      color: var(--primary-gold);
+      font-weight: 700;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
       transition: all 0.3s ease;
     }
 
-    .payment-toggle-btn.active {
-      border-color: var(--primary-saffron);
-      background: rgba(255, 111, 0, 0.04);
-      color: var(--primary-saffron);
+    .preset-btn:hover {
+      background: var(--gold-gradient);
+      color: #fff;
+      border-color: transparent;
+      transform: translateY(-1px);
     }
 
     .bank-details-card {
       background: #fffcf8;
-      border: 1px dashed var(--primary-gold);
-      border-radius: 16px;
-      padding: 1.5rem;
+      border: 1.5px dashed var(--primary-gold);
+      border-radius: 20px;
+      padding: 1.8rem;
       margin-bottom: 1.8rem;
     }
 
     .bank-detail-item {
       display: flex;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(184, 134, 58, 0.08);
-      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(184, 134, 58, 0.1);
+      padding: 0.7rem 0;
+      font-size: 0.95rem;
     }
 
     .bank-detail-item:last-child {
@@ -779,9 +901,9 @@
 
     .qr-code-container {
       background: #fffcf8;
-      border: 1px dashed var(--primary-gold);
-      border-radius: 16px;
-      padding: 1.5rem;
+      border: 1.5px dashed var(--primary-gold);
+      border-radius: 20px;
+      padding: 1.8rem;
       text-align: center;
       margin-bottom: 1.8rem;
       display: flex;
@@ -790,23 +912,15 @@
       justify-content: center;
     }
 
-    .qr-placeholder {
-      width: 180px;
-      height: 180px;
-      background: #eee;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #aaa;
-      margin-bottom: 1rem;
+    .qr-instruction {
+      font-weight: 600;
     }
 
     /* ----- footer ----- */
     .footer-custom {
       background: var(--dark-bg);
-      color: #a89d92;
-      padding: 5rem 0 2rem 0;
+      color: #c9bdae;
+      padding: 5.5rem 0 2rem 0;
       border-top: 3px solid var(--primary-gold);
       position: relative;
     }
@@ -849,8 +963,8 @@
     }
 
     .social-icon-btn {
-      width: 40px;
-      height: 40px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
@@ -859,14 +973,17 @@
       justify-content: center;
       transition: all 0.3s ease;
       text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.05);
     }
 
     .social-icon-btn:hover {
       background: var(--saffron-gradient);
       color: #fff;
       transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255, 87, 34, 0.35);
     }
   </style>
+
 </head>
 <body>
 
@@ -944,6 +1061,54 @@
   <!--  HERO SECTION                                -->
   <!-- ============================================ -->
   <section class="hero-section" id="hero">
+    <!-- Ambient glows -->
+    <div class="ambient-glow" style="top: -10%; right: 5%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255, 87, 34, 0.12) 0%, transparent 70%);"></div>
+    <div class="ambient-glow" style="bottom: -10%; left: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);"></div>
+
+    <!-- Rotating Mandala SVG -->
+    <div class="mandala-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="var(--primary-gold)" stroke-width="0.3" opacity="0.4"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--primary-gold)" stroke-width="0.2" stroke-dasharray="1,1" opacity="0.6"/>
+        <circle cx="50" cy="50" r="30" fill="none" stroke="var(--primary-gold)" stroke-width="0.3" opacity="0.5"/>
+        <circle cx="50" cy="50" r="22" fill="none" stroke="var(--primary-gold)" stroke-width="0.2" stroke-dasharray="1,1" opacity="0.6"/>
+        <circle cx="50" cy="50" r="14" fill="none" stroke="var(--primary-gold)" stroke-width="0.4" opacity="0.7"/>
+        <g stroke="var(--primary-gold)" stroke-width="0.25" fill="none" opacity="0.6">
+          <line x1="50" y1="4" x2="50" y2="96"/>
+          <line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5"/>
+          <!-- Rotated lines -->
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(15 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(15 50 50)"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5" transform="rotate(15 50 50)"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5" transform="rotate(15 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(30 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(30 50 50)"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5" transform="rotate(30 50 50)"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5" transform="rotate(30 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(45 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(45 50 50)"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5" transform="rotate(45 50 50)"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5" transform="rotate(45 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(60 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(60 50 50)"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5" transform="rotate(60 50 50)"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5" transform="rotate(60 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(75 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(75 50 50)"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5" transform="rotate(75 50 50)"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5" transform="rotate(75 50 50)"/>
+        </g>
+        <g fill="var(--primary-gold)" opacity="0.6">
+          <circle cx="50" cy="8" r="0.8"/>
+          <circle cx="50" cy="92" r="0.8"/>
+          <circle cx="8" cy="50" r="0.8"/>
+          <circle cx="92" cy="50" r="0.8"/>
+        </g>
+      </svg>
+    </div>
+
     <div class="container">
       <div class="row align-items-center g-5">
         <!-- left content -->
@@ -1062,12 +1227,41 @@
   <!-- ============================================ -->
   <!--  UPCOMING EVENTS SECTION                     -->
   <!-- ============================================ -->
-  <section class="py-6" id="events" style="background: rgba(184, 134, 58, 0.02); padding: 6rem 0;">
-    <div class="container">
+  <section class="py-6" id="events" style="background: var(--dark-gradient); color: var(--text-light); padding: 6rem 0; position: relative; overflow: hidden; border-top: 1.5px solid var(--border-gold); border-bottom: 1.5px solid var(--border-gold);">
+    <!-- Ambient glows -->
+    <div class="ambient-glow" style="top: 20%; left: -10%; width: 450px; height: 450px; background: radial-gradient(circle, rgba(212, 175, 55, 0.07) 0%, transparent 70%);"></div>
+    <div class="ambient-glow" style="bottom: 10%; right: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255, 111, 0, 0.08) 0%, transparent 70%);"></div>
+    
+    <!-- Rotating Mandala SVG (Counter) -->
+    <div class="mandala-container-left">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="var(--primary-gold)" stroke-width="0.3" opacity="0.3"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="var(--primary-gold)" stroke-width="0.2" stroke-dasharray="1,1" opacity="0.5"/>
+        <circle cx="50" cy="50" r="30" fill="none" stroke="var(--primary-gold)" stroke-width="0.3" opacity="0.4"/>
+        <circle cx="50" cy="50" r="22" fill="none" stroke="var(--primary-gold)" stroke-width="0.2" stroke-dasharray="1,1" opacity="0.5"/>
+        <circle cx="50" cy="50" r="14" fill="none" stroke="var(--primary-gold)" stroke-width="0.4" opacity="0.6"/>
+        <g stroke="var(--primary-gold)" stroke-width="0.25" fill="none" opacity="0.5">
+          <line x1="50" y1="4" x2="50" y2="96"/>
+          <line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="17.5" y1="17.5" x2="82.5" y2="82.5"/>
+          <line x1="17.5" y1="82.5" x2="82.5" y2="17.5"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(20 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(20 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(40 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(40 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(60 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(60 50 50)"/>
+          <line x1="50" y1="4" x2="50" y2="96" transform="rotate(80 50 50)"/>
+          <line x1="4" y1="50" x2="96" y2="50" transform="rotate(80 50 50)"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="container" style="position: relative; z-index: 2;">
       <div class="section-header text-center mx-auto" style="max-width: 600px;">
         <span class="section-subtitle">Auspicious Days</span>
-        <h2 class="section-title">Upcoming Festivals & Events</h2>
-        <p class="text-muted mt-3">Stay updated with our festival calendar and special events. Participate online or visit in person to receive blessings.</p>
+        <h2 class="">Upcoming Festivals & Events</h2>
+        <p class="text-muted mt-3" style="color: #c9bdae !important;">Stay updated with our festival calendar and special events. Participate online or visit in person to receive blessings.</p>
       </div>
 
       <div class="timeline-container">
@@ -1084,7 +1278,7 @@
                 <i class="bi bi-calendar-check me-2"></i>{{ \Carbon\Carbon::parse($event->event_date)->format('M d, Y') }}
               </div>
               <h3 class="event-name">{{ $event->event_name }}</h3>
-              <p class="text-muted mb-0">{{ $event->description }}</p>
+              <p class="event-desc mb-0">{{ $event->description }}</p>
               
               <div class="event-meta">
                 <span><i class="bi bi-clock"></i> {{ \Carbon\Carbon::parse($event->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($event->end_time)->format('h:i A') }}</span>
@@ -1094,10 +1288,10 @@
           </div>
         @empty
           <div class="col-12 text-center py-5">
-            <div class="timeline-card mx-auto text-center p-5" style="max-width: 600px;">
-              <i class="bi bi-calendar-x fs-1 text-muted mb-3"></i>
-              <h4 class="fw-bold">No Festivals Listed Yet</h4>
-              <p class="text-muted">Stay tuned! We are compiling the details of upcoming auspicious festivals and rituals. Check back soon.</p>
+            <div class="timeline-card mx-auto text-center p-5" style="max-width: 600px; background: rgba(30, 20, 15, 0.65);">
+              <i class="bi bi-calendar-x fs-1 text-muted mb-3" style="color: var(--primary-gold) !important;"></i>
+              <h4 class="fw-bold text-white">No Festivals Listed Yet</h4>
+              <p class="text-muted" style="color: #c9bdae !important;">Stay tuned! We are compiling the details of upcoming auspicious festivals and rituals. Check back soon.</p>
             </div>
           </div>
         @endforelse
@@ -1257,6 +1451,13 @@
                   <div class="form-floating">
                     <input type="number" min="1" class="form-control" name="amount" id="donationAmount" placeholder="Donation Amount" required value="{{ old('amount') }}" />
                     <label for="donationAmount">Donation Amount (₹) *</label>
+                  </div>
+                  <div class="preset-amount-container">
+                    <button type="button" class="preset-btn" onclick="setPresetAmount(501)">₹501</button>
+                    <button type="button" class="preset-btn" onclick="setPresetAmount(1100)">₹1,100</button>
+                    <button type="button" class="preset-btn" onclick="setPresetAmount(2100)">₹2,100</button>
+                    <button type="button" class="preset-btn" onclick="setPresetAmount(5001)">₹5,001</button>
+                    <button type="button" class="preset-btn" onclick="setPresetAmount(11000)">₹11,000</button>
                   </div>
                 </div>
                 <div class="col-md-6">
@@ -1480,6 +1681,16 @@
         navbar.classList.remove('scrolled');
       }
     });
+
+    // ----- Set Preset Donation Amount -----
+    function setPresetAmount(amount) {
+      const amountInput = document.getElementById('donationAmount');
+      if (amountInput) {
+        amountInput.value = amount;
+        // Dispatch input event to update QR code server/URL triggers
+        amountInput.dispatchEvent(new Event('input'));
+      }
+    }
 
     // ----- Donate Without Login Tab Switching -----
     function switchDonationTab(method) {
