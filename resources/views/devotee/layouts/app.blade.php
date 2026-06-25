@@ -24,8 +24,73 @@
     }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f8f4f0;
+      background: transparent !important;
       color: #1e1e2a;
+    }
+
+    /* Dynamic background layers */
+    .dashboard-bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(135deg, #fdfbf7 0%, #f7f1e6 50%, #faf5eb 100%);
+    }
+
+    .dashboard-bg-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.03;
+      background-image: 
+        radial-gradient(circle, #b8863a 1px, transparent 1px),
+        radial-gradient(circle, #b8863a 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
+      animation: shiftPattern 40s linear infinite;
+    }
+
+    @keyframes shiftPattern {
+      from { background-position: 0 0, 20px 20px; }
+      to { background-position: 40px 40px, 60px 60px; }
+    }
+
+    .dashboard-ambient-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.22;
+      animation: floatGlow 25s ease-in-out infinite alternate;
+    }
+
+    .glow-1 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(255, 111, 0, 0.4) 0%, transparent 70%);
+      top: -10%;
+      right: 5%;
+    }
+
+    .glow-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(184, 134, 58, 0.35) 0%, transparent 70%);
+      bottom: -15%;
+      left: -5%;
+      animation-delay: -5s;
+    }
+
+    @keyframes floatGlow {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+      50% {
+        transform: translate(40px, -30px) scale(1.1);
+      }
+      100% {
+        transform: translate(-30px, 40px) scale(0.95);
+      }
     }
 
     /* ---------- SIDEBAR ---------- */
@@ -285,6 +350,12 @@
   @yield('page-css')
 </head>
 <body>
+  <!-- Animated background layers -->
+  <div class="dashboard-bg-layer"></div>
+  <div class="dashboard-bg-pattern"></div>
+  <div class="dashboard-ambient-glow glow-1"></div>
+  <div class="dashboard-ambient-glow glow-2"></div>
+
   @include('layouts.partials.notifications')
 
   {{-- Devotee Sidebar --}}

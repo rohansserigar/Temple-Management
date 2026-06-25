@@ -13,6 +13,9 @@ class EhundiController extends Controller
      */
     public function show()
     {
+        if (Auth::check() && Auth::user()->role === 'Devotee') {
+            return view('devotee.ehundi');
+        }
         return view('frontend.ehundi');
     }
 

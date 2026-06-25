@@ -24,7 +24,7 @@
 <style>
   /* Premium dashboard components */
   body {
-    background-color: #fdfaf2 !important;
+    background-color: transparent !important;
   }
   .card:not(.bg-custom), .table-wrap, .stat-card, .quick-link-card {
     border: 1px solid rgba(184, 134, 58, 0.15) !important;
@@ -157,6 +157,121 @@
   .table-wrap .table td {
     padding: 12px 24px;
     border-bottom: 1px solid #f8f4f0;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&display=swap');
+
+  /* Redesigned Devotee Welcome Banner */
+  .devotee-welcome-banner {
+    background: linear-gradient(135deg, #5c140c 0%, #7c1a0e 30%, #a82e16 65%, #c8531e 100%) !important;
+    box-shadow: 0 12px 30px rgba(124, 26, 14, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.22) !important;
+    border: 1px solid rgba(255, 215, 0, 0.2) !important;
+    padding: 3.5rem 3rem !important;
+  }
+
+  .banner-ambient-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    opacity: 0.35;
+    z-index: 0;
+  }
+  .glow-orange {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, #ff6f00 0%, transparent 70%);
+    top: -30px;
+    left: 40%;
+  }
+  .glow-gold {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, #ffd700 0%, transparent 70%);
+    bottom: -80px;
+    right: 10%;
+  }
+
+  .banner-pattern-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.04;
+    background-image: 
+      repeating-linear-gradient(45deg, #ffd700 0px, #ffd700 1px, transparent 1px, transparent 15px),
+      repeating-linear-gradient(-45deg, #ffd700 0px, #ffd700 1px, transparent 1px, transparent 15px);
+  }
+
+  .banner-mandala {
+    position: absolute;
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 260px;
+    height: 260px;
+    z-index: 0;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+  .banner-mandala svg {
+    width: 100%;
+    height: 100%;
+    animation: spinMandala 40s linear infinite;
+  }
+
+  @keyframes spinMandala {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .banner-badge {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(5px);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+  }
+
+  .banner-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.3rem !important;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .banner-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+    max-width: 90%;
+  }
+
+  .banner-date-section {
+    border-left: 1px dashed rgba(255, 255, 255, 0.2);
+    padding-left: 30px;
+  }
+
+  @media (max-width: 767.98px) {
+    .devotee-welcome-banner {
+      padding: 2.5rem 2rem !important;
+    }
+    .banner-date-section {
+      border-left: none;
+      padding-left: 0;
+      margin-top: 20px;
+    }
+    .banner-mandala {
+      width: 180px;
+      height: 180px;
+      right: -20px;
+      opacity: 0.45;
+    }
+    .banner-title {
+      font-size: 1.8rem !important;
+    }
   }
 </style>
 @endsection
@@ -540,18 +655,50 @@
   @else
     <!-- DEFAULT DASHBOARD VIEW -->
     <!-- Welcome Banner -->
-    <div class="card bg-custom border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #b8863a, #f27a1a) !important;">
-        <div class="position-absolute" style="right: -50px; top: -50px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.06);"></div>
-        <div class="position-absolute" style="right: 50px; bottom: -80px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.03);"></div>
+    <div class="card devotee-welcome-banner border-0 shadow mb-4 text-white position-relative overflow-hidden animate__animated animate__fadeInDown">
+        <!-- Ambient Glowing Halos -->
+        <div class="banner-ambient-glow glow-orange"></div>
+        <div class="banner-ambient-glow glow-gold"></div>
+        
+        <!-- Repeating spiritual pattern texture overlay -->
+        <div class="banner-pattern-overlay"></div>
+        
+        <!-- Rotating Gold Mandala SVG -->
+        <div class="banner-mandala">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(255,215,0,0.15)" stroke-width="1.5" stroke-dasharray="5,5"/>
+                <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,215,0,0.2)" stroke-width="1"/>
+                <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="1.5" stroke-dasharray="10,5"/>
+                <circle cx="100" cy="100" r="65" fill="none" stroke="rgba(255,215,0,0.25)" stroke-width="1.2"/>
+                <path d="M100,5 A95,95 0 0,1 195,100 L100,100 Z" fill="none" stroke="rgba(255,215,0,0.08)" stroke-width="1"/>
+                <!-- Mandala Petals -->
+                <g stroke="rgba(255,215,0,0.22)" fill="none" stroke-width="1">
+                    <path d="M100,65 Q110,75 100,85 Q90,75 100,65"/>
+                    <path d="M100,115 Q110,125 100,135 Q90,125 100,115"/>
+                    <path d="M65,100 Q75,110 85,100 Q75,90 65,100"/>
+                    <path d="M115,100 Q125,110 135,100 Q125,90 115,100"/>
+                    <!-- Diagonal Petals -->
+                    <path d="M75,75 Q85,85 75,95 Q65,85 75,75" transform="rotate(45 100 100)"/>
+                    <path d="M75,75 Q85,85 75,95 Q65,85 75,75" transform="rotate(135 100 100)"/>
+                    <path d="M75,75 Q85,85 75,95 Q65,85 75,75" transform="rotate(225 100 100)"/>
+                    <path d="M75,75 Q85,85 75,95 Q65,85 75,75" transform="rotate(315 100 100)"/>
+                </g>
+                <circle cx="100" cy="100" r="18" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="2"/>
+                <circle cx="100" cy="100" r="8" fill="rgba(255,215,0,0.2)"/>
+            </svg>
+        </div>
+
         <div class="row align-items-center position-relative z-1">
             <div class="col-md-8">
-                <span class="badge rounded-pill px-3 py-2 mb-3" style="background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important;"><i class="bi bi-star-fill me-1"></i> Welcome to Devotee Portal</span>
-                <h1 class="fw-bold display-6 mb-2">Hare Krishna, {{ $user->name }} 🙏</h1>
-                <p class="mb-0 opacity-90">Step into the divine workspace of Temple ERP. Schedule rituals, view upcoming temple festivals, and manage your contributions seamlessly.</p>
+                <span class="badge banner-badge rounded-pill px-3 py-2 mb-3">
+                    <i class="bi bi-star-fill me-1 text-warning animate__animated animate__pulse animate__infinite"></i> Welcome to Devotee Portal
+                </span>
+                <h1 class="banner-title display-6 mb-2">Hare Krishna, {{ $user->name }} 🙏</h1>
+                <p class="banner-desc mb-0 opacity-90">Step into the divine workspace of Temple ERP. Schedule rituals, view upcoming temple events, and manage your contributions seamlessly.</p>
             </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <div class="text-white-50 small mb-1"><i class="bi bi-calendar3 me-1"></i> Today's Date</div>
-                <div class="fw-bold fs-5">{{ date('d M Y') }}</div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0 banner-date-section">
+                <div class="text-white-50 small mb-1"><i class="bi bi-calendar3 me-1 text-warning"></i> Today's Date</div>
+                <div class="banner-date fw-bold fs-5">{{ date('d M Y') }}</div>
             </div>
         </div>
     </div>
