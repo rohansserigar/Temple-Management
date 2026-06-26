@@ -13,6 +13,8 @@
     <i class="bi bi-stars text-warning"></i> Duty Events
   @elseif(request()->get('tab') == 'profile')
     <i class="bi bi-person-circle text-warning"></i> My Profile
+  @elseif(request()->get('tab') == 'chats')
+    <i class="bi bi-chat-dots text-warning"></i> Devotee Support Chats
   @else
     <i class="bi bi-speedometer2 text-warning"></i> Staff Dashboard
   @endif
@@ -75,6 +77,197 @@
   .table-wrap .table td {
     padding: 12px 24px;
     border-bottom: 1px solid #f8f4f0;
+  }
+
+  /* Staff Chat Support Styles */
+  .chat-layout {
+    display: flex;
+    height: calc(100vh - 200px);
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(184, 134, 58, 0.08);
+    overflow: hidden;
+  }
+  .chat-sidebar {
+    width: 320px;
+    border-right: 1px solid #f4eeeb;
+    display: flex;
+    flex-direction: column;
+    background: #fdfcfb;
+  }
+  .chat-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #f4eeeb;
+    font-weight: 700;
+    color: #2d1f0e;
+  }
+  .chat-sessions-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .chat-session-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f9f6f3;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .chat-session-item:hover {
+    background: #f6efe2;
+  }
+  .chat-session-item.active {
+    background: #f0e4cf;
+    border-left: 4px solid #b8863a;
+  }
+  .chat-session-devotee {
+    font-weight: 600;
+    font-size: 14.5px;
+    color: #2d1f0e;
+  }
+  .chat-session-email {
+    font-size: 12px;
+    color: #8c7e70;
+  }
+  .chat-session-time {
+    font-size: 11px;
+    color: #b8863a;
+    align-self: flex-end;
+  }
+  .chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #fafaf8;
+  }
+  .chat-main-header {
+    padding: 16px 24px;
+    background: white;
+    border-bottom: 1px solid #f4eeeb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .chat-main-devotee-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .chat-main-devotee-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: #2d1f0e;
+  }
+  .chat-main-devotee-email {
+    font-size: 12.5px;
+    color: #8c7e70;
+  }
+  .chat-area-messages {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chat-msg-row-staff {
+    display: block;
+    width: 100%;
+    clear: both;
+    margin-bottom: 8px;
+  }
+  .chat-bubble-staff {
+    max-width: 75%;
+    padding: 12px 18px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.45;
+    word-wrap: break-word;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  }
+  .chat-msg-row-staff.devotee .chat-bubble-staff {
+    background: white;
+    color: #2d1f0e;
+    border-bottom-left-radius: 4px;
+    float: left;
+    border-left: 3px solid #b8863a;
+  }
+  .chat-msg-row-staff.staff .chat-bubble-staff {
+    background: linear-gradient(135deg, #b8863a, #d4a05a);
+    color: white;
+    border-bottom-right-radius: 4px;
+    float: right;
+  }
+  .chat-msg-row-staff.bot .chat-bubble-staff {
+    background: #e9e5d9;
+    color: #7c6853;
+    border-bottom-left-radius: 4px;
+    float: left;
+    font-style: italic;
+  }
+  .chat-bubble-sender {
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .chat-msg-row-staff.devotee .chat-bubble-sender {
+    color: #b8863a;
+  }
+  .chat-msg-row-staff.staff .chat-bubble-sender {
+    color: rgba(255,255,255,0.7);
+    text-align: right;
+  }
+  .chat-msg-row-staff.bot .chat-bubble-sender {
+    color: #8c7e70;
+  }
+  .chat-footer-staff {
+    padding: 18px 24px;
+    background: white;
+    border-top: 1px solid #f4eeeb;
+    display: flex;
+    gap: 12px;
+  }
+  .chat-input-staff {
+    flex: 1;
+    border: 1px solid rgba(184, 134, 58, 0.25);
+    border-radius: 24px;
+    padding: 10px 20px;
+    font-size: 14px;
+    outline: none;
+  }
+  .chat-input-staff:focus {
+    border-color: #b8863a;
+  }
+  .chat-btn-send-staff {
+    background: linear-gradient(135deg, #b8863a, #d4a05a);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 14.5px;
+    box-shadow: 0 4px 10px rgba(184, 134, 58, 0.2);
+    transition: all 0.2s;
+  }
+  .chat-btn-send-staff:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(184, 134, 58, 0.35);
+  }
+  .chat-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #8c7e70;
+    gap: 12px;
+  }
+  .chat-empty-state i {
+    font-size: 48px;
+    color: #e3dad0;
   }
 </style>
 @endsection
@@ -566,6 +759,33 @@
       </form>
     </div>
 
+  @elseif(request()->get('tab') == 'chats')
+    <!-- SUPPORT CHATS SECTION -->
+    <div class="chat-layout animate__animated animate__fadeIn">
+      <!-- Sidebar / Active Sessions List -->
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-chat-dots-fill text-warning me-2"></i>Support Chats</span>
+          <select id="chatSessionTypeFilter" class="form-select form-select-sm border-0 bg-transparent text-warning fw-bold p-0" style="width: auto; cursor: pointer; box-shadow: none; font-size: 14px;">
+            <option value="active" selected>Active</option>
+            <option value="ended">History</option>
+          </select>
+        </div>
+        <div class="chat-sessions-list" id="staffChatSessionsList">
+          <div class="p-4 text-center text-muted">Loading chats...</div>
+        </div>
+      </div>
+
+      <!-- Main Chat Area -->
+      <div class="chat-main" id="staffChatMain">
+        <div class="chat-empty-state">
+          <i class="bi bi-chat-left-dots"></i>
+          <h5>Select a conversation</h5>
+          <p class="small text-muted">Choose an active devotee support session from the list to start replying.</p>
+        </div>
+      </div>
+    </div>
+
   @else
     <!-- DEFAULT DASHBOARD -->
     <div class="row g-4 mb-4">
@@ -685,7 +905,199 @@
       }
     }
 
+    @if(request()->get('tab') === 'chats')
+      // Staff chat support variables
+      let activeSessionId = null;
+      let sessionsPollInterval = null;
+      let messagesPollInterval = null;
 
+      function loadSessionsList() {
+        const type = $('#chatSessionTypeFilter').val() || 'active';
+        const url = type === 'ended' ? '{{ route('staff.chats.history') }}' : '{{ route('staff.chats.active') }}';
+
+        $.get(url, function(res) {
+          if (res.success) {
+            const list = $('#staffChatSessionsList');
+            const currentActive = activeSessionId;
+            list.empty();
+            if (res.sessions.length === 0) {
+              list.append('<div class="p-4 text-center text-muted small">No ' + type + ' support chats.</div>');
+              return;
+            }
+            res.sessions.forEach(sess => {
+              const activeClass = currentActive == sess.session_id ? 'active' : '';
+              const timeStr = new Date(sess.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              
+              // Pulsing green dot for new devotee messages in active lists
+              const greenDot = (type === 'active' && sess.last_sender_type === 'devotee')
+                ? '<span class="badge bg-success ms-2 animate__animated animate__pulse animate__infinite" style="font-size: 9px; padding: 2px 5px;">New Msg</span>'
+                : '';
+
+              const item = `
+                <div class="chat-session-item ${activeClass}" data-id="${sess.session_id}" data-name="${sess.devotee_name}" data-email="${sess.devotee_email}" data-status="${sess.status}">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="chat-session-devotee">${sess.devotee_name} ${greenDot}</span>
+                    <span class="chat-session-time">${timeStr}</span>
+                  </div>
+                  <span class="chat-session-email">${sess.devotee_email}</span>
+                </div>
+              `;
+              list.append(item);
+            });
+          }
+        });
+      }
+
+      function loadChatMessages() {
+        if (!activeSessionId) return;
+        $.get(`/staff/chats/${activeSessionId}/messages`, function(res) {
+          if (res.success) {
+            const container = $('#staffChatMessagesArea');
+            if (container.length === 0) return;
+            const scrollBottom = container.scrollTop() + container.innerHeight() >= container[0].scrollHeight - 50;
+            
+            container.empty();
+            res.messages.forEach(msg => {
+              const type = msg.sender_type;
+              const sender = type === 'devotee' ? 'Devotee' : (type === 'staff' ? 'You' : 'Mandir Bot');
+              let content = msg.message_text;
+
+              // Format text formatting
+              content = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+
+              let bubble = `
+                <div class="chat-msg-row-staff ${type}">
+                  <div class="chat-bubble-sender">${sender}</div>
+                  <div class="chat-bubble-staff">${content}</div>
+                </div>
+              `;
+              container.append(bubble);
+            });
+
+            // If session is ended, disable typing inputs and show info alert
+            if (res.session_status === 'ended') {
+              $('#staffChatInput').prop('disabled', true).attr('placeholder', 'This chat has been ended.');
+              $('#staffChatSendBtn').prop('disabled', true);
+              $('#staffEndChatBtn').hide();
+              if ($('#staffChatEndedAlert').length === 0) {
+                container.append('<div id="staffChatEndedAlert" class="alert alert-warning text-center mx-3 my-2 small py-2"><i class="bi bi-info-circle me-1"></i> Devotee has ended this conversation.</div>');
+              }
+            } else {
+              $('#staffChatInput').prop('disabled', false).attr('placeholder', 'Type a reply...');
+              $('#staffChatSendBtn').prop('disabled', false);
+              $('#staffEndChatBtn').show();
+              $('#staffChatEndedAlert').remove();
+            }
+
+            if (scrollBottom) {
+              container.scrollTop(container[0].scrollHeight);
+            }
+          }
+        });
+      }
+
+      // Reload list when toggling active/ended filter
+      $(document).on('change', '#chatSessionTypeFilter', function() {
+        loadSessionsList();
+      });
+
+      // Handle session click
+      $(document).on('click', '.chat-session-item', function() {
+        activeSessionId = $(this).data('id');
+        const name = $(this).data('name');
+        const email = $(this).data('email');
+        const status = $(this).data('status');
+
+        $('.chat-session-item').removeClass('active');
+        $(this).addClass('active');
+
+        // Render main chat area
+        const main = $('#staffChatMain');
+        const endBtnHtml = status === 'active' 
+          ? `<button class="btn btn-outline-danger btn-sm rounded-pill px-3" id="staffEndChatBtn">End Conversation</button>` 
+          : '';
+
+        main.empty().html(`
+          <div class="chat-main-header">
+            <div class="chat-main-devotee-info">
+              <span class="chat-main-devotee-name">${name}</span>
+              <span class="chat-main-devotee-email">${email}</span>
+            </div>
+            ${endBtnHtml}
+          </div>
+          <div class="chat-area-messages" id="staffChatMessagesArea">
+            <div class="text-center text-muted small p-4">Loading messages...</div>
+          </div>
+          <div class="chat-footer-staff">
+            <input type="text" class="chat-input-staff" id="staffChatInput" placeholder="Type a reply..." autocomplete="off">
+            <button class="chat-btn-send-staff" id="staffChatSendBtn">Send Reply</button>
+          </div>
+        `);
+
+        loadChatMessages();
+        setTimeout(() => {
+          const area = $('#staffChatMessagesArea');
+          if (area.length > 0) area.scrollTop(area[0].scrollHeight);
+        }, 300);
+      });
+
+      // Handle staff reply send
+      $(document).on('click', '#staffChatSendBtn', function() {
+        sendStaffReply();
+      });
+
+      $(document).on('keypress', '#staffChatInput', function(e) {
+        if (e.which === 13) {
+          sendStaffReply();
+        }
+      });
+
+      function sendStaffReply() {
+        const input = $('#staffChatInput');
+        const text = input.val().trim();
+        if (!text || !activeSessionId) return;
+
+        input.val('');
+
+        $.post(`/staff/chats/${activeSessionId}/reply`, {
+          _token: '{{ csrf_token() }}',
+          message: text
+        }, function(res) {
+          loadChatMessages();
+          setTimeout(() => {
+            const area = $('#staffChatMessagesArea');
+            if (area.length > 0) area.scrollTop(area[0].scrollHeight);
+          }, 100);
+        });
+      }
+
+      // Handle staff end chat
+      $(document).on('click', '#staffEndChatBtn', function() {
+        if (confirm("Are you sure you want to resolve and end this devotee conversation?")) {
+          $.post(`/staff/chats/${activeSessionId}/end`, {
+            _token: '{{ csrf_token() }}'
+          }, function(res) {
+            activeSessionId = null;
+            $('#staffChatMain').html(`
+              <div class="chat-empty-state">
+                <i class="bi bi-chat-left-dots"></i>
+                <h5>Select a conversation</h5>
+                <p class="small text-muted">Choose an active devotee support session from the list to start replying.</p>
+              </div>
+            `);
+            loadSessionsList();
+          });
+        }
+      });
+
+      // Polling Setup
+      loadSessionsList();
+      sessionsPollInterval = setInterval(loadSessionsList, 5000);
+      messagesPollInterval = setInterval(loadChatMessages, 3000);
+    @endif
   });
 </script>
 @endsection

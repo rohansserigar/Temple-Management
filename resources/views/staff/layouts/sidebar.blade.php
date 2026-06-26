@@ -12,6 +12,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a href="{{ route('staff.dashboard') }}?tab=chats" class="nav-link {{ request()->get('tab') === 'chats' ? 'active' : '' }}">
+        <i class="bi bi-chat-dots"></i> Support Chats
+      </a>
+    </li>
+    <li class="nav-item">
       <a href="{{ route('staff.dashboard') }}?tab=attendance" class="nav-link {{ request()->get('tab') === 'attendance' ? 'active' : '' }}">
         <i class="bi bi-person-check"></i> Attendance
       </a>

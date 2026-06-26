@@ -291,6 +291,13 @@ Route::middleware(['auth', 'role.admin'])->group(function () {
     // Leave Requests Route (Admin management)
     Route::get('/admin/manage-leaves', [TrusteeController::class, 'manageLeaves'])->name('admin.leaves.index');
     Route::post('/admin/leaves/status/{id}', [PriestController::class, 'updateLeaveStatus'])->name('admin.leaves.status');
+
+    // Admin Chat Support Routes
+    Route::get('/admin/chats/active', [\App\Http\Controllers\ChatController::class, 'staffGetActiveSessions'])->name('admin.chats.active');
+    Route::get('/admin/chats/history', [\App\Http\Controllers\ChatController::class, 'staffGetEndedSessions'])->name('admin.chats.history');
+    Route::get('/admin/chats/{session}/messages', [\App\Http\Controllers\ChatController::class, 'staffGetMessages'])->name('admin.chats.messages');
+    Route::post('/admin/chats/{session}/reply', [\App\Http\Controllers\ChatController::class, 'staffSendReply'])->name('admin.chats.reply');
+    Route::post('/admin/chats/{session}/end', [\App\Http\Controllers\ChatController::class, 'staffEndSession'])->name('admin.chats.end');
 });
 
 // ============================================
@@ -309,6 +316,12 @@ Route::middleware(['auth', 'role.devotee'])->group(function () {
     // Devotee Payment Routes
     Route::get('/devotee/payment', [DevoteeController::class, 'showPaymentPage'])->name('devotee.payment');
     Route::post('/devotee/payment/process', [DevoteeController::class, 'processPayment'])->name('devotee.payment.process');
+
+    // Devotee Chatbot Routes
+    Route::get('/devotee/chat/session', [\App\Http\Controllers\ChatController::class, 'getSession'])->name('devotee.chat.session');
+    Route::get('/devotee/chat/messages', [\App\Http\Controllers\ChatController::class, 'getMessages'])->name('devotee.chat.messages');
+    Route::post('/devotee/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('devotee.chat.send');
+    Route::post('/devotee/chat/end', [\App\Http\Controllers\ChatController::class, 'endSession'])->name('devotee.chat.end');
 });
 
 // ============================================
@@ -338,6 +351,13 @@ Route::middleware(['auth', 'role.staff'])->group(function () {
     Route::post('/staff/attendance/toggle', [StaffController::class, 'toggleOnlineStatus'])->name('staff.attendance.toggle');
     Route::post('/staff/attendance/present', [StaffController::class, 'markPresent'])->name('staff.attendance.present');
     Route::post('/staff/attendance/end', [StaffController::class, 'endWork'])->name('staff.attendance.end');
+
+    // Staff Chat Support Routes
+    Route::get('/staff/chats/active', [\App\Http\Controllers\ChatController::class, 'staffGetActiveSessions'])->name('staff.chats.active');
+    Route::get('/staff/chats/history', [\App\Http\Controllers\ChatController::class, 'staffGetEndedSessions'])->name('staff.chats.history');
+    Route::get('/staff/chats/{session}/messages', [\App\Http\Controllers\ChatController::class, 'staffGetMessages'])->name('staff.chats.messages');
+    Route::post('/staff/chats/{session}/reply', [\App\Http\Controllers\ChatController::class, 'staffSendReply'])->name('staff.chats.reply');
+    Route::post('/staff/chats/{session}/end', [\App\Http\Controllers\ChatController::class, 'staffEndSession'])->name('staff.chats.end');
 });
 
 // ============================================

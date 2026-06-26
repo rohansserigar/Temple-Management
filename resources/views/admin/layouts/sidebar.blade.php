@@ -7,8 +7,13 @@
 
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+      <a href="{{ route('admin.dashboard') }}" class="nav-link {{ (request()->routeIs('admin.dashboard') && request()->get('tab') !== 'chats') ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.dashboard') }}?tab=chats" class="nav-link {{ (request()->routeIs('admin.dashboard') && request()->get('tab') === 'chats') ? 'active' : '' }}">
+        <i class="bi bi-chat-dots-fill"></i> Support Chats
       </a>
     </li>
     <li class="nav-item">

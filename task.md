@@ -4,6 +4,9 @@
 - [x] Implement role-based route protection middleware `RoleMiddleware` and register alias in `bootstrap/app.php`
 - [x] Group routes in `routes/web.php` with respective auth and role restrictions
 - [x] Create dynamic controllers: `TrusteeController`, `StaffController`, `AccountantController`
+- [x] Route devotee chat/agent clicks/inputs to live staff support chat mode
+- [x] Update UPI Payee ID to `rohandevadigapithrodi-1@oksbi`
+- [x] Correct syntax nesting bug in staff dashboard script preventing chat polling from loading/rendering
 - [x] Segregate and build interactive tab dashboards for Trustee, Accountant, and Staff
 - [x] Redesign Devotee Pooja Booking to a 6-step wizard (Poojas -> Date & Time -> Priest Select -> Mode -> Summary -> Payment)
 - [x] Refactor ProfileController validation and persistence logic for all roles
