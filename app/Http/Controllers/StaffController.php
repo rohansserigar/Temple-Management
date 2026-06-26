@@ -646,4 +646,191 @@ class StaffController extends Controller
             return redirect()->back()->with('error', 'Failed to end work: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Counter: Process offline walk-in pooja booking.
+     */
+    public function counterBookPooja(Request $request)
+    {
+        $request->validate([
+            'pooja_id' => 'required|exists:poojas,pooja_id',
+            'devotee_name' => 'required|string|max:255',
+            'mobile' => 'required|digits:10',
+            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_time' => 'required'
+        ]);
+
+        $poojaId = $request->pooja_id;
+        $devoteeName = $request->devotee_name;
+        $mobile = $request->mobile;
+        $date = $request->booking_date;
+        $time = $request->booking_time;
+
+        $pooja = DB::table('poojas')->where('pooja_id', $poojaId)->first();
+        if (!$pooja || $pooja->status !== 'Active') {
+            return response()->json(['success' => false, 'message' => 'Selected pooja is not active or not found.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Find or dynamically create user/devotee records to prevent dashboard query join failures
+            $user = \App\Models\User::where('mobile', $mobile)->first();
+            if (!$user) {
+                $user = \App\Models\User::create([
+                    'name' => $devoteeName,
+                    'email' => 'offline_' . $mobile . '_' . uniqid() . '@templeconnect.com',
+                    'mobile' => $mobile,
+                    'password' => Hash::make('offline123'),
+                    'role' => 'Devotee',
+                    'status' => 'Active'
+                ]);
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
+            $devotee = \App\Models\Devotee::where('user_id', $user->id)->first();
+            if (!$devotee) {
+                $devotee = \App\Models\Devotee::create([
+                    'user_id' => $user->id,
+                    'address' => 'Offline Counter walk-in',
+                    'gothra' => 'Not Specified',
+                    'nakshatra' => 'Not Specified',
+                    'gender' => 'Male',
+                    'dob' => '2000-01-01',
+                    'verified' => 1
+                ]);
+            }
+
+            // Auto assign workloads
+            $bookingController = new \App\Http\Controllers\BookingController();
+            $assignedPriestId = $bookingController->autoAssignPriest($poojaId, $date, $time);
+
+            if (!$assignedPriestId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No active/available priests are available for {$pooja->pooja_name} on {$date} at {$time}. All priest slots are full."
+                ], 422);
+            }
+
+            $amount = $pooja->pooja_fee;
+            $totalAmount = $amount; // No discounts apply for offline counter bookings
+
+            // Create Pooja Booking
+            $bookingId = DB::table('pooja_bookings')->insertGetId([
+                'devotee_id' => $devotee->devotee_id,
+                'pooja_id' => $poojaId,
+                'priest_id' => $assignedPriestId,
+                'booking_date' => $date,
+                'booking_time' => $time,
+                'booking_type' => 'Offline',
+                'amount' => $amount,
+                'discount_amount' => 0.00,
+                'shipping_charge' => 0.00,
+                'total_amount' => $totalAmount,
+                'payment_method' => 'Cash',
+                'payment_status' => 'Paid',
+                'booking_status' => 'Confirmed',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Status Log
+            DB::table('booking_status_logs')->insert([
+                'booking_id' => $bookingId,
+                'status_from' => null,
+                'status_to' => 'Confirmed',
+                'changed_by' => Auth::id(),
+                'remarks' => 'Offline booking recorded at staff counter.',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Payment Record
+            DB::table('booking_payments')->insert([
+                'booking_id' => $bookingId,
+                'payment_method' => 'Cash',
+                'transaction_id' => 'OFFLINE-' . strtoupper(uniqid()),
+                'amount' => $totalAmount,
+                'status' => 'Paid',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Fetch priest name for printing
+            $priestName = DB::table('users')
+                ->where('id', DB::table('priests')->where('priest_id', $assignedPriestId)->value('user_id'))
+                ->value('name');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Offline Pooja Booking registered successfully.',
+                'booking_details' => [
+                    'booking_id' => $bookingId,
+                    'pooja_name' => $pooja->pooja_name,
+                    'devotee_name' => $devoteeName,
+                    'mobile' => $mobile,
+                    'date' => $date,
+                    'time' => $time,
+                    'priest_name' => $priestName,
+                    'amount' => number_format($totalAmount, 2)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process counter booking: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Counter: Record offline walk-in donation.
+     */
+    public function counterRecordDonation(Request $request)
+    {
+        $request->validate([
+            'donor_name' => 'required|string|max:255',
+            'mobile' => 'required|digits:10',
+            'amount' => 'required|numeric|min:1',
+            'purpose' => 'required|string|max:100'
+        ]);
+
+        try {
+            $donationId = DB::table('donations_without_logins')->insertGetId([
+                'donor_name' => $request->donor_name,
+                'email' => null,
+                'mobile' => $request->mobile,
+                'amount' => $request->amount,
+                'purpose' => $request->purpose,
+                'purpose_details' => 'Recorded at Staff Counter',
+                'payment_method' => 'Cash',
+                'transaction_id' => 'OFFLINE-DON-' . strtoupper(uniqid()),
+                'donation_date' => date('Y-m-d'),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Offline donation recorded successfully.',
+                'donation_details' => [
+                    'donation_id' => $donationId,
+                    'donor_name' => $request->donor_name,
+                    'mobile' => $request->mobile,
+                    'amount' => number_format($request->amount, 2),
+                    'purpose' => $request->purpose,
+                    'date' => date('Y-m-d')
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to record counter donation: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

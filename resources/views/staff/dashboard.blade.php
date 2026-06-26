@@ -17,6 +17,8 @@
     <i class="bi bi-chat-dots text-warning"></i> Devotee Support Chats
   @elseif(request()->get('tab') == 'prev_chats')
     <i class="bi bi-clock-history text-warning"></i> Devotee Chat History
+  @elseif(request()->get('tab') == 'counter')
+    <i class="bi bi-calculator text-warning"></i> Offline Counter Services
   @else
     <i class="bi bi-speedometer2 text-warning"></i> Staff Dashboard
   @endif
@@ -24,6 +26,18 @@
 
 @section('page-css')
 <style>
+  #counterTab .nav-link.active {
+    background: linear-gradient(135deg, #b8863a, #d4a05a) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(184, 134, 58, 0.2) !important;
+  }
+  #counterTab .nav-link {
+    color: #7b6b5a;
+  }
+  #counterTab .nav-link:hover {
+    color: #b8863a;
+  }
+
   .stat-card {
     background: white;
     border-radius: 20px;
@@ -800,6 +814,175 @@
       </div>
     </div>
 
+  @elseif(request()->get('tab') == 'counter')
+    <!-- OFFLINE COUNTER SECTION -->
+    <div class="card border-0 shadow-sm p-4 animate__animated animate__fadeIn" style="border-radius: 24px; border: 1px solid rgba(184,134,58,0.08);">
+      <div class="card-body p-0">
+        
+        <!-- Tab Navigation -->
+        <ul class="nav nav-pills mb-4 gap-2 bg-light p-2 rounded-pill" id="counterTab" role="tablist" style="width: fit-content;">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4 fw-semibold" id="pooja-booking-tab" data-bs-toggle="pill" data-bs-target="#pooja-booking" type="button" role="tab" style="font-size: 0.95rem; transition: 0.2s;">
+              <i class="bi bi-shop-window me-1"></i> Book Pooja
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4 fw-semibold" id="donation-tab" data-bs-toggle="pill" data-bs-target="#donation-counter" type="button" role="tab" style="font-size: 0.95rem; transition: 0.2s;">
+              <i class="bi bi-cash-coin me-1"></i> Record Donation
+            </button>
+          </li>
+        </ul>
+
+        <!-- Tab Contents -->
+        <div class="tab-content" id="counterTabContent">
+          
+          <!-- POOJA BOOKING TAB -->
+          <div class="tab-pane fade show active" id="pooja-booking" role="tabpanel">
+            <div class="row g-4">
+              <!-- Form Column -->
+              <div class="col-lg-6">
+                <h5 class="fw-bold mb-3" style="color: #2d1f0e;">🛕 Walk-in Pooja Booking</h5>
+                <p class="text-muted small mb-4">Select the pooja, input client contact details, select date and time. An available priest will be auto-assigned.</p>
+                
+                <form id="offlinePoojaForm" class="needs-validation" novalidate>
+                  @csrf
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Devotee Name</label>
+                    <input type="text" id="pooja_devotee_name" class="form-control rounded-3" placeholder="Devotee Full Name" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Mobile Number (10 digits)</label>
+                    <input type="text" id="pooja_mobile" class="form-control rounded-3" placeholder="10 Digit Contact No." required pattern="[0-9]{10}">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Pooja Service</label>
+                    @php
+                      $activePoojas = DB::table('poojas')->where('status', 'Active')->orderBy('pooja_name', 'asc')->get();
+                    @endphp
+                    <select id="pooja_id" class="form-select rounded-3" required>
+                      <option value="" selected disabled>Select Pooja</option>
+                      @foreach($activePoojas as $pj)
+                        <option value="{{ $pj->pooja_id }}" data-price="{{ $pj->pooja_fee }}">
+                          {{ $pj->pooja_name }} — ₹{{ number_format($pj->pooja_fee, 2) }}
+                        </option>
+                      @endforeach
+                    </select>
+                  </div>
+
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-secondary">Booking Date</label>
+                      <input type="date" id="pooja_booking_date" class="form-control rounded-3" min="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold text-secondary">Booking Time Slot</label>
+                      <select id="pooja_booking_time" class="form-select rounded-3" required>
+                        <option value="" selected disabled>Select Slot</option>
+                        <option value="06:00:00">06:00 AM</option>
+                        <option value="07:00:00">07:00 AM</option>
+                        <option value="08:00:00">08:00 AM</option>
+                        <option value="09:00:00">09:00 AM</option>
+                        <option value="10:00:00">10:00 AM</option>
+                        <option value="11:00:00">11:00 AM</option>
+                        <option value="12:00:00">12:00 PM</option>
+                        <option value="14:00:00">02:00 PM</option>
+                        <option value="15:00:00">03:00 PM</option>
+                        <option value="16:00:00">04:00 PM</option>
+                        <option value="17:00:00">05:00 PM</option>
+                        <option value="18:00:00">06:00 PM</option>
+                        <option value="19:00:00">07:00 PM</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button type="button" class="btn btn-warning rounded-pill px-4 py-2.5 fw-semibold text-white w-100" id="btnBookPoojaOffline" style="background: linear-gradient(135deg, #b8863a, #d4a05a); border: none;">
+                    Confirm & Auto-Assign Priest
+                  </button>
+                </form>
+              </div>
+
+              <!-- Ticket Output / Summary Column -->
+              <div class="col-lg-6 border-start ps-lg-4">
+                <div id="bookingResultArea" class="h-100 d-flex align-items-center justify-content-center">
+                  <div class="text-center text-muted p-5 bg-light rounded-4 w-100 border border-dashed">
+                    <i class="bi bi-receipt-cutoff text-warning" style="font-size: 3rem;"></i>
+                    <h6 class="fw-bold mt-3 text-secondary">Token Output</h6>
+                    <p class="small mb-0">Fill in the walk-in booking details and submit. The print-ready counter token will be generated here.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DONATIONS RECORD TAB -->
+          <div class="tab-pane fade" id="donation-counter" role="tabpanel">
+            <div class="row g-4">
+              <!-- Form Column -->
+              <div class="col-lg-6">
+                <h5 class="fw-bold mb-3" style="color: #2d1f0e;">🪙 Counter Donation Entry</h5>
+                <p class="text-muted small mb-4">Record cash or walk-in donations. Input name, mobile, category (purpose), and amount.</p>
+                
+                <form id="offlineDonationForm" class="needs-validation" novalidate>
+                  @csrf
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Donor Name</label>
+                    <input type="text" id="donation_donor_name" class="form-control rounded-3" placeholder="Donor Name" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Mobile Number (10 digits)</label>
+                    <input type="text" id="donation_mobile" class="form-control rounded-3" placeholder="10 Digit Contact No." required pattern="[0-9]{10}">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold text-secondary">Donation Category</label>
+                    <select id="donation_purpose" class="form-select rounded-3" required>
+                      <option value="" selected disabled>Select Category</option>
+                      <option value="Annadaan">Annadaan Fund</option>
+                      <option value="Temple Development">Temple Infrastructure & Development</option>
+                      <option value="Pooja Fund">General Pooja Fund</option>
+                      <option value="Gau Seva">Gau Seva (Cow Care)</option>
+                      <option value="Orphanage Charity">Charity & Prasadam Distribution</option>
+                      <option value="General Donation">General Donation</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary">Donation Amount (₹)</label>
+                    <div class="input-group">
+                      <span class="input-group-text bg-light fw-bold">₹</span>
+                      <input type="number" id="donation_amount" class="form-control rounded-3" placeholder="Enter Amount" min="1" required>
+                    </div>
+                  </div>
+
+                  <button type="button" class="btn btn-warning rounded-pill px-4 py-2.5 fw-semibold text-white w-100" id="btnRecordDonationOffline" style="background: linear-gradient(135deg, #b8863a, #d4a05a); border: none;">
+                    Record Donation & Issue Receipt
+                  </button>
+                </form>
+              </div>
+
+              <!-- Receipt Output / Summary Column -->
+              <div class="col-lg-6 border-start ps-lg-4">
+                <div id="donationResultArea" class="h-100 d-flex align-items-center justify-content-center">
+                  <div class="text-center text-muted p-5 bg-light rounded-4 w-100 border border-dashed">
+                    <i class="bi bi-coin text-warning" style="font-size: 3rem;"></i>
+                    <h6 class="fw-bold mt-3 text-secondary">Receipt Output</h6>
+                    <p class="small mb-0">Fill in the walk-in donation details and submit. The print-ready counter receipt will be generated here.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
   @else
     <!-- DEFAULT DASHBOARD -->
     <div class="row g-4 mb-4">
@@ -1123,6 +1306,251 @@
       loadSessionsList();
       sessionsPollInterval = setInterval(loadSessionsList, 5000);
       messagesPollInterval = setInterval(loadChatMessages, 3000);
+    @endif
+
+    @if(request()->get('tab') === 'counter')
+      // Pooja booking submit
+      $('#btnBookPoojaOffline').on('click', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        $('#offlinePoojaForm').removeClass('was-validated');
+        
+        const devoteeName = $('#pooja_devotee_name').val().trim();
+        const mobile = $('#pooja_mobile').val().trim();
+        const poojaId = $('#pooja_id').val();
+        const bookingDate = $('#pooja_booking_date').val();
+        const bookingTime = $('#pooja_booking_time').val();
+        
+        // Basic validation
+        if (!devoteeName || !mobile || !poojaId || !bookingDate || !bookingTime) {
+          $('#offlinePoojaForm').addClass('was-validated');
+          alert('Please fill out all fields correctly.');
+          return;
+        }
+        
+        if (!/^\d{10}$/.test(mobile)) {
+          alert('Please enter a valid 10-digit mobile number.');
+          return;
+        }
+
+        // Disable button and show spinner
+        const btn = $(this);
+        const originalText = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+        $.ajax({
+          url: '/staff/counter/book-pooja',
+          method: 'POST',
+          data: {
+            _token: '{{ csrf_token() }}',
+            pooja_id: poojaId,
+            devotee_name: devoteeName,
+            mobile: mobile,
+            booking_date: bookingDate,
+            booking_time: bookingTime
+          },
+          success: function(res) {
+            btn.prop('disabled', false).html(originalText);
+            if (res.success) {
+              const details = res.booking_details;
+              
+              // Render Ticket Token
+              const ticketHtml = `
+                <div class="card border-0 shadow-sm p-4 bg-white text-dark text-start animate__animated animate__fadeIn" style="border-radius: 16px; border: 1px dashed #b8863a !important; max-width: 400px; margin: 0 auto; font-family: 'Courier New', Courier, monospace; background: #fffcf6;">
+                  <div class="text-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: #5c3c10;">SRI MANDIR TEMPLE</h5>
+                    <small class="text-muted fw-bold">OFFLINE POOJA TOKEN</small>
+                    <hr style="border-top: 1px dashed #b8863a; margin: 10px 0;">
+                  </div>
+                  <div class="mb-2">
+                    <strong>Token ID:</strong> <span class="float-end fw-bold">#TK-${details.booking_id}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Pooja:</strong> <span class="float-end">${details.pooja_name}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Devotee:</strong> <span class="float-end">${details.devotee_name}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Mobile:</strong> <span class="float-end">${details.mobile}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Date:</strong> <span class="float-end">${details.date}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Time Slot:</strong> <span class="float-end">${details.time}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Priest:</strong> <span class="float-end fw-bold text-success">${details.priest_name}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Amount Paid:</strong> <span class="float-end fw-bold">₹${details.amount}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Payment Mode:</strong> <span class="float-end">Cash (Paid)</span>
+                  </div>
+                  <hr style="border-top: 1px dashed #b8863a; margin: 10px 0;">
+                  <div class="text-center text-muted mb-3" style="font-size: 0.85rem;">
+                    <div>Thank you for visiting Sri Mandir.</div>
+                    <div>Please show this token at the counter.</div>
+                  </div>
+                  <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-warning rounded-pill w-100 fw-bold text-white btn-print-token" data-token-id="TK-${details.booking_id}">
+                      <i class="bi bi-printer-fill me-1"></i> Print Token
+                    </button>
+                    <button class="btn btn-outline-secondary rounded-pill w-100 fw-bold btn-confirm-pooja" data-token-id="TK-${details.booking_id}">
+                      <i class="bi bi-check-circle-fill me-1"></i> Confirm Pooja
+                    </button>
+                  </div>
+                </div>
+              `;
+              $('#bookingResultArea').html(ticketHtml);
+              
+              // Reset form
+              $('#offlinePoojaForm')[0].reset();
+            } else {
+              alert(res.message || 'An error occurred while booking.');
+            }
+          },
+          error: function(xhr) {
+            btn.prop('disabled', false).html(originalText);
+            let errMsg = 'An error occurred while processing the request.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errMsg = xhr.responseJSON.message;
+            }
+            alert(errMsg);
+          }
+        });
+      });
+
+      // Donation record submit
+      $('#btnRecordDonationOffline').on('click', function(e) {
+        e.preventDefault();
+        
+        // Clear previous errors
+        $('#offlineDonationForm').removeClass('was-validated');
+        
+        const donorName = $('#donation_donor_name').val().trim();
+        const mobile = $('#donation_mobile').val().trim();
+        const purpose = $('#donation_purpose').val();
+        const amount = $('#donation_amount').val();
+        
+        // Basic validation
+        if (!donorName || !mobile || !purpose || !amount || amount <= 0) {
+          $('#offlineDonationForm').addClass('was-validated');
+          alert('Please fill out all fields correctly.');
+          return;
+        }
+        
+        if (!/^\d{10}$/.test(mobile)) {
+          alert('Please enter a valid 10-digit mobile number.');
+          return;
+        }
+
+        // Disable button and show spinner
+        const btn = $(this);
+        const originalText = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+        $.ajax({
+          url: '/staff/counter/record-donation',
+          method: 'POST',
+          data: {
+            _token: '{{ csrf_token() }}',
+            donor_name: donorName,
+            mobile: mobile,
+            purpose: purpose,
+            amount: amount
+          },
+          success: function(res) {
+            btn.prop('disabled', false).html(originalText);
+            if (res.success) {
+              const details = res.donation_details;
+              
+              // Render Donation Receipt
+              const receiptHtml = `
+                <div class="card border-0 shadow-sm p-4 bg-white text-dark text-start animate__animated animate__fadeIn" style="border-radius: 16px; border: 1px dashed #b8863a !important; max-width: 400px; margin: 0 auto; font-family: 'Courier New', Courier, monospace; background: #fcfcfc;">
+                  <div class="text-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: #5c3c10;">SRI MANDIR TEMPLE</h5>
+                    <small class="text-muted fw-bold">OFFLINE DONATION RECEIPT</small>
+                    <hr style="border-top: 1px dashed #b8863a; margin: 10px 0;">
+                  </div>
+                  <div class="mb-2">
+                    <strong>Receipt ID:</strong> <span class="float-end fw-bold">#REC-${details.donation_id}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Donor Name:</strong> <span class="float-end">${details.donor_name}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Mobile:</strong> <span class="float-end">${details.mobile}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Category:</strong> <span class="float-end">${details.purpose}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Amount Paid:</strong> <span class="float-end fw-bold">₹${details.amount}</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Payment Mode:</strong> <span class="float-end">Cash (Paid)</span>
+                  </div>
+                  <div class="mb-2">
+                    <strong>Date:</strong> <span class="float-end">${details.date}</span>
+                  </div>
+                  <hr style="border-top: 1px dashed #b8863a; margin: 10px 0;">
+                  <div class="text-center text-muted mb-3" style="font-size: 0.85rem;">
+                    <div>May the blessings of God be with you.</div>
+                    <div>Thank you for your generous contribution!</div>
+                  </div>
+                  <button class="btn btn-warning rounded-pill w-100 fw-bold text-white btn-print-receipt" data-receipt-id="REC-${details.donation_id}">
+                    <i class="bi bi-printer-fill me-1"></i> Print Receipt
+                  </button>
+                </div>
+              `;
+              $('#donationResultArea').html(receiptHtml);
+              
+              // Reset form
+              $('#offlineDonationForm')[0].reset();
+            } else {
+              alert(res.message || 'An error occurred while recording the donation.');
+            }
+          },
+          error: function(xhr) {
+            btn.prop('disabled', false).html(originalText);
+            let errMsg = 'An error occurred while processing the request.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errMsg = xhr.responseJSON.message;
+            }
+            alert(errMsg);
+          }
+        });
+      });
+
+      // Delegate Print Token click
+      $(document).on('click', '.btn-print-token', function() {
+        const tokenId = $(this).data('token-id');
+        alert('Token ID #' + tokenId + ' printed successfully!');
+      });
+
+      // Delegate Confirm Pooja click
+      $(document).on('click', '.btn-confirm-pooja', function() {
+        const tokenId = $(this).data('token-id');
+        alert('Pooja Booking for Token #' + tokenId + ' has been confirmed!');
+        // Optionally reset result area back to placeholder state
+        $('#bookingResultArea').html(`
+          <div class="text-center text-muted p-5 bg-light rounded-4 w-100 border border-dashed animate__animated animate__fadeIn">
+            <i class="bi bi-receipt-cutoff text-warning" style="font-size: 3rem;"></i>
+            <h6 class="fw-bold mt-3 text-secondary">Token Output</h6>
+            <p class="small mb-0">Fill in the walk-in booking details and submit. The print-ready counter token will be generated here.</p>
+          </div>
+        `);
+      });
+
+      // Delegate Print Receipt click
+      $(document).on('click', '.btn-print-receipt', function() {
+        const receiptId = $(this).data('receipt-id');
+        alert('Receipt ID #' + receiptId + ' printed successfully!');
+      });
     @endif
   });
 </script>

@@ -22,6 +22,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a href="{{ route('staff.dashboard') }}?tab=counter" class="nav-link {{ request()->get('tab') === 'counter' ? 'active' : '' }}">
+        <i class="bi bi-calculator-fill text-warning"></i> Offline Counter
+      </a>
+    </li>
+    <li class="nav-item">
       <a href="{{ route('staff.dashboard') }}?tab=attendance" class="nav-link {{ request()->get('tab') === 'attendance' ? 'active' : '' }}">
         <i class="bi bi-person-check"></i> Attendance
       </a>

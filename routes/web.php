@@ -358,6 +358,10 @@ Route::middleware(['auth', 'role.staff'])->group(function () {
     Route::get('/staff/chats/{session}/messages', [\App\Http\Controllers\ChatController::class, 'staffGetMessages'])->name('staff.chats.messages');
     Route::post('/staff/chats/{session}/reply', [\App\Http\Controllers\ChatController::class, 'staffSendReply'])->name('staff.chats.reply');
     Route::post('/staff/chats/{session}/end', [\App\Http\Controllers\ChatController::class, 'staffEndSession'])->name('staff.chats.end');
+
+    // Staff Offline Counter Routes
+    Route::post('/staff/counter/book-pooja', [StaffController::class, 'counterBookPooja'])->name('staff.counter.book-pooja');
+    Route::post('/staff/counter/record-donation', [StaffController::class, 'counterRecordDonation'])->name('staff.counter.record-donation');
 });
 
 // ============================================

@@ -700,7 +700,7 @@ class BookingController extends Controller
     /**
      * Workload-Balanced Auto Priest Assignment
      */
-    private function autoAssignPriest($poojaId, $date, $time)
+    public function autoAssignPriest($poojaId, $date, $time)
     {
         $activePriestsQuery = DB::table('priests')
             ->whereIn('employment_status', ['Active', 'On Leave']);
@@ -744,7 +744,7 @@ class BookingController extends Controller
     /**
      * Check if a priest is available based on overlap and capacity rules
      */
-    private function isPriestAvailable($priestId, $poojaId, $date, $time)
+    public function isPriestAvailable($priestId, $poojaId, $date, $time)
     {
         $pooja = DB::table('poojas')->where('pooja_id', $poojaId)->first();
         if (!$pooja) return false;
