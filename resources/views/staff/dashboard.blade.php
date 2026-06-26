@@ -15,6 +15,8 @@
     <i class="bi bi-person-circle text-warning"></i> My Profile
   @elseif(request()->get('tab') == 'chats')
     <i class="bi bi-chat-dots text-warning"></i> Devotee Support Chats
+  @elseif(request()->get('tab') == 'prev_chats')
+    <i class="bi bi-clock-history text-warning"></i> Devotee Chat History
   @else
     <i class="bi bi-speedometer2 text-warning"></i> Staff Dashboard
   @endif
@@ -759,17 +761,25 @@
       </form>
     </div>
 
-  @elseif(request()->get('tab') == 'chats')
+  @elseif(request()->get('tab') == 'chats' || request()->get('tab') == 'prev_chats')
+    @php
+      $isPrevChats = request()->get('tab') == 'prev_chats';
+    @endphp
     <!-- SUPPORT CHATS SECTION -->
     <div class="chat-layout animate__animated animate__fadeIn">
       <!-- Sidebar / Active Sessions List -->
       <div class="chat-sidebar">
         <div class="chat-sidebar-header d-flex justify-content-between align-items-center">
-          <span><i class="bi bi-chat-dots-fill text-warning me-2"></i>Support Chats</span>
-          <select id="chatSessionTypeFilter" class="form-select form-select-sm border-0 bg-transparent text-warning fw-bold p-0" style="width: auto; cursor: pointer; box-shadow: none; font-size: 14px;">
-            <option value="active" selected>Active</option>
-            <option value="ended">History</option>
-          </select>
+          @if($isPrevChats)
+            <span><i class="bi bi-clock-history text-warning me-2"></i>Completed Chats</span>
+            <input type="hidden" id="chatSessionTypeFilter" value="ended">
+          @else
+            <span><i class="bi bi-chat-dots-fill text-warning me-2"></i>Support Chats</span>
+            <select id="chatSessionTypeFilter" class="form-select form-select-sm border-0 bg-transparent text-warning fw-bold p-0" style="width: auto; cursor: pointer; box-shadow: none; font-size: 14px;">
+              <option value="active" selected>Active</option>
+              <option value="ended">History</option>
+            </select>
+          @endif
         </div>
         <div class="chat-sessions-list" id="staffChatSessionsList">
           <div class="p-4 text-center text-muted">Loading chats...</div>
@@ -781,7 +791,11 @@
         <div class="chat-empty-state">
           <i class="bi bi-chat-left-dots"></i>
           <h5>Select a conversation</h5>
-          <p class="small text-muted">Choose an active devotee support session from the list to start replying.</p>
+          @if($isPrevChats)
+            <p class="small text-muted">Choose a completed devotee support session from the list to view the history.</p>
+          @else
+            <p class="small text-muted">Choose an active devotee support session from the list to start replying.</p>
+          @endif
         </div>
       </div>
     </div>
@@ -905,7 +919,7 @@
       }
     }
 
-    @if(request()->get('tab') === 'chats')
+    @if(request()->get('tab') === 'chats' || request()->get('tab') === 'prev_chats')
       // Staff chat support variables
       let activeSessionId = null;
       let sessionsPollInterval = null;
@@ -1020,6 +1034,21 @@
           ? `<button class="btn btn-outline-danger btn-sm rounded-pill px-3" id="staffEndChatBtn">End Conversation</button>` 
           : '';
 
+        const footerHtml = status === 'active'
+          ? `
+            <div class="chat-footer-staff">
+              <input type="text" class="chat-input-staff" id="staffChatInput" placeholder="Type a reply..." autocomplete="off">
+              <button class="chat-btn-send-staff" id="staffChatSendBtn">Send Reply</button>
+            </div>
+          `
+          : `
+            <div class="chat-footer-staff justify-content-center bg-light border-top py-3 px-4">
+              <div class="alert alert-secondary text-center w-100 mb-0 py-2 small" style="border-radius: 20px; color: #5c3c10; background-color: #fcf8e3; border: 1px solid #faebcc;">
+                <i class="bi bi-lock-fill me-1"></i> This conversation has been completed and is now read-only.
+              </div>
+            </div>
+          `;
+
         main.empty().html(`
           <div class="chat-main-header">
             <div class="chat-main-devotee-info">
@@ -1031,10 +1060,7 @@
           <div class="chat-area-messages" id="staffChatMessagesArea">
             <div class="text-center text-muted small p-4">Loading messages...</div>
           </div>
-          <div class="chat-footer-staff">
-            <input type="text" class="chat-input-staff" id="staffChatInput" placeholder="Type a reply..." autocomplete="off">
-            <button class="chat-btn-send-staff" id="staffChatSendBtn">Send Reply</button>
-          </div>
+          ${footerHtml}
         `);
 
         loadChatMessages();

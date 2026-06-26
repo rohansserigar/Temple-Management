@@ -7,13 +7,18 @@
 
   <ul class="nav flex-column">
     <li class="nav-item">
-      <a href="{{ route('admin.dashboard') }}" class="nav-link {{ (request()->routeIs('admin.dashboard') && request()->get('tab') !== 'chats') ? 'active' : '' }}">
+      <a href="{{ route('admin.dashboard') }}" class="nav-link {{ (request()->routeIs('admin.dashboard') && !in_array(request()->get('tab'), ['chats', 'prev_chats'])) ? 'active' : '' }}">
         <i class="bi bi-speedometer2"></i> Dashboard
       </a>
     </li>
     <li class="nav-item">
       <a href="{{ route('admin.dashboard') }}?tab=chats" class="nav-link {{ (request()->routeIs('admin.dashboard') && request()->get('tab') === 'chats') ? 'active' : '' }}">
         <i class="bi bi-chat-dots-fill"></i> Support Chats
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ route('admin.dashboard') }}?tab=prev_chats" class="nav-link {{ (request()->routeIs('admin.dashboard') && request()->get('tab') === 'prev_chats') ? 'active' : '' }}">
+        <i class="bi bi-clock-history"></i> Previous Chats
       </a>
     </li>
     <li class="nav-item">

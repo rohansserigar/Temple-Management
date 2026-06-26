@@ -17,6 +17,11 @@
       </a>
     </li>
     <li class="nav-item">
+      <a href="{{ route('staff.dashboard') }}?tab=prev_chats" class="nav-link {{ request()->get('tab') === 'prev_chats' ? 'active' : '' }}">
+        <i class="bi bi-clock-history"></i> Previous Chats
+      </a>
+    </li>
+    <li class="nav-item">
       <a href="{{ route('staff.dashboard') }}?tab=attendance" class="nav-link {{ request()->get('tab') === 'attendance' ? 'active' : '' }}">
         <i class="bi bi-person-check"></i> Attendance
       </a>
