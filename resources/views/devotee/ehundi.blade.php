@@ -5,15 +5,6 @@
 
 @section('page-css')
   <style>
-    /* ----- RESET & ROOT ----- */
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     :root {
       --gold: #D4AF37;
       --gold-light: #F0D060;
@@ -28,17 +19,27 @@
       --shadow-gold: 0 4px 32px rgba(212, 175, 55, 0.18);
     }
 
-    html,
-    body {
-      min-height: 100vh;
-      font-family: 'Lato', sans-serif;
+    .ehundi-dashboard-wrapper {
+      position: relative;
+      margin: -1.5rem;
+      padding: 1.5rem;
+      min-height: calc(100vh - 100px);
       background: linear-gradient(160deg, #2A0D00 0%, #3E1C00 40%, #1A0800 100%) !important;
-      overflow-x: hidden;
+      font-family: 'Lato', sans-serif;
+      border-radius: 16px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .ehundi-dashboard-wrapper *,
+    .ehundi-dashboard-wrapper *::before,
+    .ehundi-dashboard-wrapper *::after {
+      box-sizing: border-box;
     }
 
     /* ----- BACKGROUND ----- */
     .bg-layer {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 0;
       background:
@@ -48,7 +49,7 @@
     }
 
     .bg-pattern {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 0;
       opacity: 0.04;
@@ -59,7 +60,7 @@
 
     /* ----- FLOATING PARTICLES ----- */
     #particle-canvas {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 1;
       pointer-events: none;
@@ -69,8 +70,8 @@
     .page-wrap {
       position: relative;
       z-index: 2;
-      min-height: 100vh;
-      padding: 32px 16px 64px;
+      min-height: auto;
+      padding: 16px 16px 32px;
     }
 
     /* ----- HEADER ----- */
@@ -522,7 +523,7 @@
 @endsection
 
 @section('content')
-
+<div class="ehundi-dashboard-wrapper">
   <!-- Background layers -->
   <div class="bg-layer"></div>
   <div class="bg-pattern"></div>
@@ -717,6 +718,7 @@
       ✦ &nbsp; Secure Donations &nbsp;•&nbsp; 100% goes to temple &nbsp;•&nbsp; Blessed by the Lord &nbsp; ✦
     </div>
   </div>
+</div>
 @endsection
 
 @section('page-js')
@@ -740,8 +742,9 @@
       let W, H, particles = [];
 
       function resize() {
-        W = canvas.width = window.innerWidth;
-        H = canvas.height = window.innerHeight;
+        const parent = canvas.parentElement;
+        W = canvas.width = parent ? parent.offsetWidth : window.innerWidth;
+        H = canvas.height = parent ? parent.offsetHeight : window.innerHeight;
       }
       resize();
       window.addEventListener('resize', resize);

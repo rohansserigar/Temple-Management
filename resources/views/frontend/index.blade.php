@@ -1149,40 +1149,17 @@
             </div>
           </li>
 
-          <!-- Login or Dashboard Authentication -->
-          @auth
-            @php
-              $role = auth()->user()->role;
-              $dashboardRoute = 'login';
-              if ($role === 'Admin') $dashboardRoute = 'admin.dashboard';
-              elseif ($role === 'Devotee') $dashboardRoute = 'devotee.dashboard';
-              elseif ($role === 'Priest') $dashboardRoute = 'priest.dashboard';
-              elseif ($role === 'Trustee') $dashboardRoute = 'trustee.dashboard';
-              elseif ($role === 'Staff') $dashboardRoute = 'staff.dashboard';
-              elseif ($role === 'Accountant') $dashboardRoute = 'accountant.dashboard';
-            @endphp
-            <li class="nav-item ms-lg-3">
-              <a class="btn btn-gold" href="{{ route($dashboardRoute) }}">
-                <i class="bi bi-speedometer2 me-1"></i> Dashboard
-              </a>
-            </li>
-            <li class="nav-item ms-lg-2">
-              <a class="btn btn-outline-gold" href="{{ route('logout') }}">
-                <i class="bi bi-box-arrow-right me-1"></i> Logout
-              </a>
-            </li>
-          @else
-            <li class="nav-item ms-lg-3">
-              <a class="btn btn-saffron" href="{{ route('login') }}">
-                <i class="bi  bi-box-arrow-in-right me-1"></i> Login
-              </a>
-            </li>
-            <li class="nav-item ms-lg-2">
-              <a class="btn btn-outline-saffron" href="{{ route('register') }}">
-                <i class="bi bi-person-plus me-1"></i> Register
-              </a>
-            </li>
-          @endauth
+          <!-- Login or Register buttons -->
+          <li class="nav-item ms-lg-3">
+            <a class="btn btn-saffron" href="{{ route('login') }}">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Login
+            </a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <a class="btn btn-outline-saffron" href="{{ route('register') }}">
+              <i class="bi bi-person-plus me-1"></i> Register
+            </a>
+          </li>
         </ul>
       </div>
     </div>
