@@ -23,11 +23,11 @@
             Online Pooja Booking, Donations and Temple Services
         </p>
 
-        <a href="/login" class="btn btn-primary">
+        <a href="{{ route('login') }}" class="btn btn-primary">
             Login
         </a>
 
-        <a href="/register" class="btn btn-warning">
+        <a href="{{ route('register') }}" class="btn btn-warning">
             Register
         </a>
     </div>

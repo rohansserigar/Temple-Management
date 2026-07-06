@@ -740,7 +740,7 @@
             
             // Auto fetch available priests via AJAX if timeslots exist
             if(p.booking_date && p.booking_time) {
-                fetch(`/booking/check-availability?pooja_id=${p.pooja_id}&booking_date=${p.booking_date}&booking_time=${p.booking_time}`)
+                fetch(`{{ url('/booking/check-availability') }}?pooja_id=${p.pooja_id}&booking_date=${p.booking_date}&booking_time=${p.booking_time}`)
                     .then(res => res.json())
                     .then(data => {
                         const select = document.getElementById(`preferred_priest_${idx}`);

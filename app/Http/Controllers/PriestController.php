@@ -258,7 +258,7 @@ class PriestController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'mobile' => 'required|string|max:10',
+            'mobile' => 'required|string|max:15',
             'email' => 'required|email',
             'specialization' => 'nullable|string',
             'salary' => 'required|numeric|min:0',
@@ -268,7 +268,7 @@ class PriestController extends Controller
             'address' => 'nullable|string',
             'account_holder_name' => 'nullable|string',
             'account_number' => 'nullable|string',
-            'ifsc_code' => 'nullable|string|max:11',
+            'ifsc_code' => 'nullable|string|max:20',
             'bank_name' => 'nullable|string',
             'branch_name' => 'nullable|string',
         ]);
@@ -362,20 +362,26 @@ class PriestController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            $msg = $e->getMessage();
+            if (str_contains($msg, 'foreign key constraint fails') || str_contains($msg, 'Integrity constraint violation')) {
+                $msg = 'This priest has historical pooja bookings, leave requests, or chats and cannot be deleted. Please suspend or set their employment status to "Inactive" instead.';
+            } else {
+                $msg = 'Failed to delete priest: ' . $msg;
+            }
             return redirect()->back()
-                ->with('error', 'Failed to delete priest: ' . $e->getMessage());
+                ->with('error', $msg);
         }
     }    public function storePriest(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'mobile' => 'required|string|max:10|unique:users,mobile',
+            'mobile' => 'required|string|max:15|unique:users,mobile',
             'gender' => 'nullable|string',
             'dob' => 'nullable|date',
             'experience_years' => 'nullable|integer|min:0|max:50',
             'qualification' => 'nullable|string',
-            'emergency_contact' => 'nullable|string|max:10',
+            'emergency_contact' => 'nullable|string|max:15',
             'specialization' => 'required|string',
             'employment_status' => 'nullable|string',
             'current_status' => 'nullable|string',
@@ -384,7 +390,7 @@ class PriestController extends Controller
             'monthly_salary' => 'required|numeric|min:0',
             'account_holder_name' => 'nullable|string',
             'account_number' => 'nullable|string',
-            'ifsc_code' => 'nullable|string|max:11',
+            'ifsc_code' => 'nullable|string|max:20',
             'bank_name' => 'nullable|string',
             'branch_name' => 'nullable|string',
         ]);
@@ -437,9 +443,17 @@ class PriestController extends Controller
                 ]);
             }
 
+            $maxPriestId = DB::table('priests')->max('priest_id');
+            $nextNum = 1;
+            if ($maxPriestId) {
+                $num = (int) filter_var($maxPriestId, FILTER_SANITIZE_NUMBER_INT);
+                $nextNum = $num + 1;
+            }
+            $priestId = 'PRIEST' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
             DB::table('priests')->insert([
                 'user_id' => $userId,
-                'priest_id' => 'PRIEST' . str_pad(DB::table('priests')->count() + 1, 4, '0', STR_PAD_LEFT),
+                'priest_id' => $priestId,
                 'gender' => $request->gender,
                 'dob' => $request->dob,
                 'experience_years' => $request->experience_years,

@@ -1061,6 +1061,7 @@
 
 @section('page-js')
 <script>
+  const BASE_URL = '{{ url("/") }}';
   $(document).ready(function() {
     // Live shift timer
     const timerEl = document.getElementById('live-shift-timer');
@@ -1147,7 +1148,7 @@
 
       function loadChatMessages() {
         if (!activeSessionId) return;
-        $.get(`/staff/chats/${activeSessionId}/messages`, function(res) {
+        $.get(`${BASE_URL}/staff/chats/${activeSessionId}/messages`, function(res) {
           if (res.success) {
             const container = $('#staffChatMessagesArea');
             if (container.length === 0) return;
@@ -1271,7 +1272,7 @@
 
         input.val('');
 
-        $.post(`/staff/chats/${activeSessionId}/reply`, {
+        $.post(`${BASE_URL}/staff/chats/${activeSessionId}/reply`, {
           _token: '{{ csrf_token() }}',
           message: text
         }, function(res) {
@@ -1286,7 +1287,7 @@
       // Handle staff end chat
       $(document).on('click', '#staffEndChatBtn', function() {
         if (confirm("Are you sure you want to resolve and end this devotee conversation?")) {
-          $.post(`/staff/chats/${activeSessionId}/end`, {
+          $.post(`${BASE_URL}/staff/chats/${activeSessionId}/end`, {
             _token: '{{ csrf_token() }}'
           }, function(res) {
             activeSessionId = null;
@@ -1340,7 +1341,7 @@
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
 
         $.ajax({
-          url: '/staff/counter/book-pooja',
+          url: BASE_URL + '/staff/counter/book-pooja',
           method: 'POST',
           data: {
             _token: '{{ csrf_token() }}',
@@ -1454,7 +1455,7 @@
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
 
         $.ajax({
-          url: '/staff/counter/record-donation',
+          url: BASE_URL + '/staff/counter/record-donation',
           method: 'POST',
           data: {
             _token: '{{ csrf_token() }}',

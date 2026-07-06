@@ -634,6 +634,7 @@
 
 @section('page-js')
 <script>
+    const BASE_URL = '{{ url("/") }}';
     $(document).ready(function() {
         console.log('Admin Dashboard loaded');
 
@@ -682,7 +683,7 @@
 
         function loadChatMessages() {
             if (!activeSessionId) return;
-            $.get(`/admin/chats/${activeSessionId}/messages`, function(res) {
+            $.get(`${BASE_URL}/admin/chats/${activeSessionId}/messages`, function(res) {
                 if (res.success) {
                     const container = $('#staffChatMessagesArea');
                     if (container.length === 0) return;
@@ -806,7 +807,7 @@
 
             input.val('');
 
-            $.post(`/admin/chats/${activeSessionId}/reply`, {
+            $.post(`${BASE_URL}/admin/chats/${activeSessionId}/reply`, {
                 _token: '{{ csrf_token() }}',
                 message: text
             }, function(res) {
@@ -821,7 +822,7 @@
         // Handle staff end chat
         $(document).on('click', '#staffEndChatBtn', function() {
             if (confirm("Are you sure you want to resolve and end this devotee conversation?")) {
-                $.post(`/admin/chats/${activeSessionId}/end`, {
+                $.post(`${BASE_URL}/admin/chats/${activeSessionId}/end`, {
                     _token: '{{ csrf_token() }}'
                 }, function(res) {
                     activeSessionId = null;
